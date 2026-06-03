@@ -590,14 +590,23 @@ function setEstado(e){estadoNovedad=e;segSin.className=e==='sin'?'act-sin':'';se
 /* voz */
 const micBtn=document.getElementById('micBtn'),micLabel=document.getElementById('micLabel'),micNote=document.getElementById('micNote'),interimEl=document.getElementById('interim'),texto=document.getElementById('fTexto');
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let recognition=null,recording=false;
+let vozBase='';        // texto confirmado antes/entre sesiones de escucha
+let vozSesion='';      // finales acumulados en la sesión de escucha actual
 if(!SR){micBtn.disabled=true;micLabel.textContent='Voz no disponible';micNote.textContent='Usa Chrome o Edge en el teléfono.';}
 else{recognition=new SR();recognition.lang='es-CL';recognition.continuous=true;recognition.interimResults=true;
-  recognition.onresult=e=>{let it='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal){const sep=texto.value&&!/\s$/.test(texto.value)?' ':'';texto.value+=sep+t.trim()+(/[.?!]$/.test(t.trim())?' ':'. ');}else it+=t;}interimEl.textContent=it;};
+  recognition.onresult=e=>{
+    let fin='',it='';
+    for(let i=0;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=(fin?' ':'')+t.trim();else it+=t;}
+    vozSesion=fin;
+    const sep=vozBase&&!/\s$/.test(vozBase)?' ':'';
+    texto.value=vozBase+(vozSesion?sep+vozSesion:'');
+    interimEl.textContent=it;
+  };
   recognition.onerror=e=>{if(e.error==='not-allowed'||e.error==='service-not-allowed'){micNote.textContent='Permiso de micrófono denegado.';stopRec();}};
-  recognition.onend=()=>{if(recording){try{recognition.start();}catch(_){}}};
+  recognition.onend=()=>{if(recording){if(vozSesion){const sep=vozBase&&!/\s$/.test(vozBase)?' ':'';vozBase=vozBase+sep+vozSesion;vozSesion='';}try{recognition.start();}catch(_){}}};
   micBtn.addEventListener('click',()=>recording?stopRec():startRec());}
-function startRec(){try{recognition.start();recording=true;micBtn.classList.add('rec');micLabel.textContent='Detener';micNote.textContent='Escuchando…';}catch(_){}}
-function stopRec(){recording=false;try{recognition.stop();}catch(_){}micBtn.classList.remove('rec');micLabel.textContent='Dictar por voz';interimEl.textContent='';if(SR)micNote.textContent='Reconocimiento en español (Chile).';}
+function startRec(){vozBase=texto.value;vozSesion='';try{recognition.start();recording=true;micBtn.classList.add('rec');micLabel.textContent='Detener';micNote.textContent='Escuchando…';}catch(_){}}
+function stopRec(){recording=false;try{recognition.stop();}catch(_){}if(vozSesion){const sep=vozBase&&!/\s$/.test(vozBase)?' ':'';vozBase=vozBase+sep+vozSesion;vozSesion='';}texto.value=vozBase;micBtn.classList.remove('rec');micLabel.textContent='Dictar por voz';interimEl.textContent='';if(SR)micNote.textContent='Reconocimiento en español (Chile).';}
 /* registrar */
 document.getElementById('submitBtn').addEventListener('click',async()=>{
   const sup=document.getElementById('fSup').value.trim(),detalle=texto.value.trim(),btn=document.getElementById('submitBtn');
@@ -684,6 +693,11 @@ function renderBlock(b){
       return `<tr><td>${esc(r.folio)}</td><td>${esc(r.instalacion)}</td><td>${esc(r.supervisor)}</td><td><span class="badge-cell ${bd}">${et}</span></td><td>${esc(r.cuando)}</td></tr>`;}).join('');
     return `<table class="rep"><thead><tr><th>Folio</th><th>Instalación</th><th>Supervisor</th><th>Estado</th><th>Cuándo</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
+  if(b.type==='novedades'){
+    if(!b.items.length)return '<div class="resumen" style="border-color:var(--pk-green)">Sin novedades ni incidencias en el período.</div>';
+    return b.items.map(r=>{const isRej=r.tipo==='rej';const badge=isRej?'<span class="badge-cell b-rej">Fuera de perímetro</span>':'<span class="badge-cell b-con">Con novedad</span>';const extra=(isRej&&r.dist!=null)?` · a ${r.dist} m (perímetro ${r.radio} m)`:'';
+      return `<div style="border:1px solid var(--line);border-left:4px solid ${isRej?'var(--urgent)':'var(--amber)'};border-radius:8px;padding:11px 14px;margin-bottom:9px;background:#fff"><div style="display:flex;flex-wrap:wrap;gap:7px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:6px"><b style="color:var(--ink);font-family:'Saira',sans-serif">${esc(r.folio)}</b> ${badge} <span>${esc(r.instalacion)}</span><span>·</span><span>${esc(r.supervisor)}</span><span>·</span><span>${esc(r.cuando)}${extra}</span></div><div style="font-size:13.5px;line-height:1.55;color:var(--ink)">${esc(r.texto||'(sin descripción)')}</div></div>`;}).join('');
+  }
   if(b.type==='findings')return b.items.map((h,i)=>`<div class="find ${h.ok?'ok':''}"><span class="fn">${h.ok?'✓':(i+1)}</span><span>${esc(h.text)}</span></div>`).join('');
   return '';
 }
@@ -695,6 +709,7 @@ function renderText(model){
     else if(b.type==='table'){t+='   '+b.head.join(' | ')+'\n';b.rows.forEach(r=>t+='   '+r.map(c=>{const o=typeof c==='object'?c:{v:c};return o.v+(o.flag?` [${o.flag.txt}]`:'');}).join(' | ')+'\n');}
     else if(b.type==='cobertura'){if(b.items.length){t+='   Sin cobertura:\n';b.items.forEach(i=>t+=`     - ${i.nombre} (${i.cliente})\n`);}else t+='   Todas las instalaciones activas con cobertura.\n';}
     else if(b.type==='detalle')b.items.forEach(r=>t+=`   • [${r.folio}] ${r.instalacion} · ${r.supervisor} · ${r.estado==='rej'?'Fuera de perímetro':(r.estado==='con'?'Con novedad':'Sin novedad')} · ${r.cuando}\n`);
+    else if(b.type==='novedades'){if(!b.items.length)t+='   Sin novedades ni incidencias.\n';else b.items.forEach(r=>{const ex=(r.tipo==='rej'&&r.dist!=null)?` · a ${r.dist} m (perímetro ${r.radio} m)`:'';t+=`   • [${r.folio}] ${r.tipo==='rej'?'FUERA DE PERÍMETRO':'CON NOVEDAD'} · ${r.instalacion} · ${r.supervisor} · ${r.cuando}${ex}\n     ${r.texto||'(sin descripción)'}\n`;});}
     else if(b.type==='findings')b.items.forEach((h,i)=>t+=`   ${h.ok?'-':(i+1)+'.'} ${h.text}\n`);
   });
   return t+`\n${notaAuto()}`;
@@ -776,6 +791,14 @@ function tablaBlock(h,headFirst,f,key){
     rows:stats.map(s=>[{v:recortar(s.k,30)},{v:s.t,num:true},{v:s.con,num:true},{v:s.rej,num:true,cls:s.rej?'':''},{v:s.pct+'%',num:true,flag:s.flag}])};
 }
 function findingsBlock(f,sinCob,ambito){const arr=hallazgosArr(f,sinCob,ambito);return {type:'findings',h:'Hallazgos y recomendaciones',items:arr.length?arr.map(text=>({text})):[{text:'Sin hallazgos relevantes. La operación se mantuvo dentro de parámetros normales.',ok:true}]};}
+function novedadesBlock(f){
+  const items=f.filter(r=>r.rechazada||r.conNovedad).sort((a,b)=>new Date(b.fechaISO)-new Date(a.fechaISO)).map(r=>({
+    folio:r.folio,instalacion:r.instalacion,supervisor:r.supervisor,
+    cuando:r.horaTexto||new Date(r.fechaISO).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),
+    tipo:r.rechazada?'rej':'con',texto:r.detalle,dist:(r.dist==null?null:r.dist),radio:(r.radio==null?null:r.radio)
+  }));
+  return {type:'novedades',h:'Novedades e incidencias reportadas',items};
+}
 
 /* ---- Modelos de informe ---- */
 function reporteDiaModel(){
@@ -788,6 +811,7 @@ function reporteDiaModel(){
     {type:'resumen',h:'Resumen ejecutivo',text:`Durante la jornada se registraron ${val.length} ronda(s) válida(s), con un cumplimiento sin novedad del ${cumpl}%. `+(conNov.length?`Se reportaron ${conNov.length} novedad(es) que requieren seguimiento. `:'No se reportaron novedades. ')+(rej.length?`Se detectaron ${rej.length} intento(s) fuera de perímetro, que demandan revisión inmediata.`:'No se registraron intentos fuera de perímetro.')},
     {type:'kpis',h:'Indicadores de la jornada',items:[{v:val.length,k:'Rondas válidas'},{v:cumpl+'%',k:'Sin novedad'},{v:conNov.length,k:'Con novedad',cls:'amber'},{v:rej.length,k:'Fuera de perímetro',cls:'red'},{v:`${new Set(val.map(r=>r.instalacion)).size}/${instalaciones.filter(i=>i.activa).length}`,k:'Instalaciones cubiertas'}]},
     coberturaBlock(sinCob),
+    novedadesBlock(rondas),
     tablaBlock('Análisis por instalación','Instalación',rondas,'instalacion'),
     findingsBlock(rondas,sinCob,'jornada')
   ]};
@@ -799,6 +823,7 @@ function reporteListaModel(items){
     {type:'resumen',h:'Resumen',text:`Selección de ${items.length} registro(s): ${val.length} ronda(s) válida(s) con ${cumpl}% sin novedad, ${conNov.length} con novedad y ${rej.length} fuera de perímetro.`},
     {type:'kpis',h:'Indicadores',items:[{v:val.length,k:'Rondas válidas'},{v:cumpl+'%',k:'Sin novedad'},{v:conNov.length,k:'Con novedad',cls:'amber'},{v:rej.length,k:'Fuera de perímetro',cls:'red'}]},
     {type:'detalle',h:'Detalle',items:items.map(r=>({folio:r.folio,instalacion:r.instalacion,cliente:r.cliente,supervisor:r.supervisor,estado:r.rechazada?'rej':(r.conNovedad?'con':'sin'),cuando:r.horaTexto||new Date(r.fechaISO).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}))},
+    novedadesBlock(items),
     tablaBlock('Análisis por instalación','Instalación',items,'instalacion'),
     findingsBlock(items,[],'conjunto seleccionado')
   ]};
@@ -1005,6 +1030,7 @@ function reporteGerenciaModel(f){
     tablaBlock('Análisis por instalación','Instalación',f,'instalacion'),
     coberturaBlock(sinCob),
     tablaBlock('Análisis por supervisor','Supervisor',f,'supervisor'),
+    novedadesBlock(f),
     findingsBlock(f,sinCob,'período')
   ]};
 }
