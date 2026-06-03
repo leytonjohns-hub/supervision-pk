@@ -883,7 +883,14 @@ document.getElementById('iSave').addEventListener('click',async()=>{
 });
 document.getElementById('iCancel').addEventListener('click',resetInstForm);
 function resetInstForm(){editInstId=null;aPunto=null;['iNombre','iCliente','iCodigo','iDir'].forEach(id=>document.getElementById(id).value='');document.getElementById('iRadio').value=150;document.getElementById('iRadioVal').textContent='150 m';if(aMarker){adminMap.removeLayer(aMarker);aMarker=null;}if(aCircle){adminMap.removeLayer(aCircle);aCircle=null;}aCoord();document.getElementById('iResults').classList.remove('show');document.getElementById('instFormTitle').textContent='Nueva instalación';document.getElementById('iSave').textContent='Agregar instalación';document.getElementById('iCancel').style.display='none';}
+function refrescarClientes(){
+  const base=['Weir Minerals','Air Liquide','Soprole','Recsol'];
+  const set=[...new Set(base.concat(instalaciones.map(i=>i.cliente).filter(Boolean)))].sort((a,b)=>a.localeCompare(b,'es'));
+  const dl=document.getElementById('clientes');
+  if(dl)dl.innerHTML=set.map(c=>`<option>${esc(c)}</option>`).join('');
+}
 function renderInst(){
+  refrescarClientes();
   document.getElementById('instCount').textContent=instalaciones.length+' faenas';
   const el=document.getElementById('instList');
   if(!instalaciones.length){el.innerHTML='<div class="empty"><span class="ic">🏭</span>Sin instalaciones. Crea la primera en el panel de la izquierda.</div>';return;}
