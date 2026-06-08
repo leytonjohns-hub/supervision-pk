@@ -125,6 +125,17 @@
   .seg button{flex:1;font-family:'Saira',sans-serif;font-weight:600;font-size:13.5px;letter-spacing:.4px;text-transform:uppercase;padding:14px 8px;cursor:pointer;background:#fff;border:none;color:var(--muted);transition:all .15s;min-height:50px}
   .seg button+button{border-left:1.5px solid var(--line)}.seg button.act-sin{background:var(--pk-green);color:#fff}.seg button.act-con{background:var(--amber);color:#fff}
   .novedad-detail{max-height:0;overflow:hidden;transition:max-height .3s ease}.novedad-detail.open{max-height:360px;margin-top:14px}
+  .chk-item{border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:9px;background:#fff}
+  .chk-item.nc{border-color:#e7b6b2;background:#fdf6f5}
+  .chk-q{font-size:13.5px;color:var(--ink);font-weight:600;line-height:1.35;margin-bottom:9px}
+  .chk-opts{display:flex;gap:7px}
+  .chk-opts button{flex:1;font-family:'Saira',sans-serif;font-weight:600;font-size:12px;letter-spacing:.3px;text-transform:uppercase;padding:9px 4px;cursor:pointer;background:#fff;border:1.5px solid var(--line);border-radius:8px;color:var(--muted);transition:all .12s;min-height:42px}
+  .chk-opts button.sel-c{background:var(--pk-green);border-color:var(--pk-green);color:#fff}
+  .chk-opts button.sel-nc{background:var(--urgent);border-color:var(--urgent);color:#fff}
+  .chk-opts button.sel-na{background:var(--muted);border-color:var(--muted);color:#fff}
+  .chk-obs{max-height:0;overflow:hidden;transition:max-height .25s ease}.chk-obs.open{max-height:140px;margin-top:9px}
+  .chk-obs textarea{width:100%;min-height:54px;border:1.5px solid #e7b6b2;border-radius:8px;padding:9px 11px;font-family:inherit;font-size:13px;resize:vertical;box-sizing:border-box}
+  .chk-resumen{font-size:12.5px;color:var(--muted);margin:2px 0 4px}
   .voice-row{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
   .mic-btn{display:inline-flex;align-items:center;gap:9px;font-family:'Saira',sans-serif;font-weight:600;font-size:14px;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;background:#fff;color:var(--pk-green-dark);border:1.5px solid var(--pk-green);border-radius:30px;padding:11px 18px 11px 14px;min-height:46px}
   .mic-btn .dot{width:12px;height:12px;border-radius:50%;background:var(--pk-green);flex:0 0 auto}
@@ -320,10 +331,11 @@
           <div class="map" id="capMap"></div>
           <p class="map-hint" id="mapHint">Selecciona la instalación; el círculo verde es su perímetro. Luego valida tu ubicación.</p>
           <div class="presencia" id="presencia" style="display:none"><div class="estado" id="presEstado">—</div><div class="det" id="presDet"></div></div>
-          <div class="field" style="margin:18px 0 9px"><label>Estado de la ronda <span class="req">*</span></label></div>
-          <div class="seg" id="seg"><button type="button" id="segSin" class="act-sin">Sin novedad</button><button type="button" id="segCon">Con novedad</button></div>
-          <div class="novedad-detail" id="novDetail"><div class="field" style="margin-bottom:0"><label>Detalle de la novedad <span class="req">*</span></label>
-            <div style="position:relative"><textarea id="fTexto" placeholder="Escriba o dicte la novedad…"></textarea><div class="map-hint" id="interim" style="font-style:italic"></div></div>
+          <div class="field" style="margin:18px 0 9px"><label>Checklist de supervisión <span class="req">*</span></label></div>
+          <div class="chk-resumen" id="chkResumen">Marca cada punto: Conforme · No conforme · No aplica.</div>
+          <div id="chkWrap"></div>
+          <div class="novedad-detail open" style="margin-top:6px"><div class="field" style="margin-bottom:0"><label>Novedades del turno</label>
+            <div style="position:relative"><textarea id="fTexto" placeholder="Describa novedades del turno, si las hay…"></textarea><div class="map-hint" id="interim" style="font-style:italic"></div></div>
             <div class="voice-row"><button type="button" class="mic-btn" id="micBtn"><span class="dot"></span><span id="micLabel">Dictar por voz</span></button><span class="mic-note" id="micNote">Reconocimiento en español (Chile).</span></div>
           </div></div>
           <button class="submit-btn" id="submitBtn" style="margin-top:18px">Registrar ronda</button>
@@ -560,7 +572,7 @@ document.getElementById('pwConfirm').addEventListener('click',async()=>{
 });
 
 /* ====================== SUPERVISOR ====================== */
-let instSel=null,posSup=null,estadoNovedad='sin';
+let instSel=null,posSup=null;
 function poblarInstSelect(){
   const s=document.getElementById('fInst');
   s.innerHTML='<option value="">— Seleccionar —</option>'+instalaciones.filter(i=>i.activa).map(i=>`<option value="${i.id}">${esc(i.nombre)} · ${esc(i.cliente)}</option>`).join('')+'<option value="otro">Otro (sin perímetro)</option>';
@@ -620,9 +632,31 @@ function updatePresencia(){
   if(r.dentro){p.className='presencia in';est.textContent='✓ Dentro del perímetro';det.textContent=`A ${Math.round(r.dist)} m del centro (perímetro ${r.radio} m${r.acc?`, GPS ±${r.acc} m`:''}).`;}
   else{p.className='presencia out';est.textContent='✗ Fuera del perímetro';det.textContent=`A ${Math.round(r.dist)} m del centro (perímetro ${r.radio} m${r.acc?`, GPS ±${r.acc} m`:''}). No podrás registrar; el intento se notificará a las gerencias.`;}
 }
-const segSin=document.getElementById('segSin'),segCon=document.getElementById('segCon'),novDetail=document.getElementById('novDetail');
-segSin.addEventListener('click',()=>setEstado('sin'));segCon.addEventListener('click',()=>setEstado('con'));
-function setEstado(e){estadoNovedad=e;segSin.className=e==='sin'?'act-sin':'';segCon.className=e==='con'?'act-con':'';novDetail.classList.toggle('open',e==='con');}
+/* ===== Checklist de supervisión (fijo) ===== */
+const CHK_ITEMS=[
+  {id:'asistencia',t:'Asistencia del guardia según rol/turno'},
+  {id:'indumentaria',t:'Presentación e indumentaria (uniforme, credencial visible)'},
+  {id:'garita',t:'Estado y limpieza de la garita o puesto'},
+  {id:'control_id',t:'Implementos de control de identidad (lector, libro de registro, credenciales de visita)'},
+  {id:'libro',t:'Libro de novedades al día'},
+  {id:'equipamiento',t:'Equipamiento del guardia (linterna, radio/comunicación, elementos de seguridad)'},
+  {id:'acceso',t:'Control de acceso operativo (barreras, citófono, cámaras visibles funcionando)'}
+];
+let chkState={},chkObs={};
+function renderChecklist(){
+  const w=document.getElementById('chkWrap');
+  w.innerHTML=CHK_ITEMS.map(it=>`<div class="chk-item" id="chk_${it.id}"><div class="chk-q">${esc(it.t)}</div><div class="chk-opts"><button type="button" data-id="${it.id}" data-v="C">Conforme</button><button type="button" data-id="${it.id}" data-v="NC">No conforme</button><button type="button" data-id="${it.id}" data-v="NA">No aplica</button></div><div class="chk-obs" id="obs_${it.id}"><textarea data-obs="${it.id}" placeholder="Detalle el motivo del 'No conforme'…"></textarea></div></div>`).join('');
+  w.querySelectorAll('.chk-opts button').forEach(b=>b.addEventListener('click',()=>setChk(b.dataset.id,b.dataset.v)));
+  w.querySelectorAll('textarea[data-obs]').forEach(t=>t.addEventListener('input',e=>{chkObs[e.target.dataset.obs]=e.target.value;}));
+}
+function setChk(id,v){
+  chkState[id]=v;
+  const item=document.getElementById('chk_'+id);
+  item.querySelectorAll('.chk-opts button').forEach(b=>{b.classList.remove('sel-c','sel-nc','sel-na');if(b.dataset.v===v)b.classList.add(v==='C'?'sel-c':v==='NC'?'sel-nc':'sel-na');});
+  const obs=document.getElementById('obs_'+id);obs.classList.toggle('open',v==='NC');item.classList.toggle('nc',v==='NC');
+}
+function resetChecklist(){chkState={};chkObs={};renderChecklist();}
+renderChecklist();
 /* voz */
 const micBtn=document.getElementById('micBtn'),micLabel=document.getElementById('micLabel'),micNote=document.getElementById('micNote'),interimEl=document.getElementById('interim'),texto=document.getElementById('fTexto');
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let recognition=null,recording=false;
@@ -644,21 +678,42 @@ else{recognition=new SR();recognition.lang='es-CL';recognition.continuous=true;r
 function startRec(){vozBase=texto.value;vozSesion='';try{recognition.start();recording=true;micBtn.classList.add('rec');micLabel.textContent='Detener';micNote.textContent='Escuchando…';}catch(_){}}
 function stopRec(){recording=false;try{recognition.stop();}catch(_){}if(vozSesion){const sep=vozBase&&!/\s$/.test(vozBase)?' ':'';vozBase=vozBase+sep+vozSesion;vozSesion='';}texto.value=vozBase;micBtn.classList.remove('rec');micLabel.textContent='Dictar por voz';interimEl.textContent='';if(SR)micNote.textContent='Reconocimiento en español (Chile).';}
 /* registrar */
+const CHK_LBL={C:'Conforme',NC:'No conforme',NA:'No aplica'};
+function checklistData(){return CHK_ITEMS.map(it=>({id:it.id,item:it.t,estado:chkState[it.id]||null,obs:(chkState[it.id]==='NC'?(chkObs[it.id]||'').trim():'')}));}
+function componerDetalle(novedad){
+  const cl=checklistData();
+  const noConf=cl.filter(c=>c.estado==='NC');
+  let partes=[];
+  if(noConf.length){partes.push('NO CONFORME: '+noConf.map(c=>c.item+(c.obs?` (${c.obs})`:'')).join('; ')+'.');}
+  if(novedad)partes.push('Novedades: '+novedad);
+  if(!partes.length)return 'Supervisión conforme. Sin novedades.';
+  return partes.join(' ');
+}
 document.getElementById('submitBtn').addEventListener('click',async()=>{
-  const sup=document.getElementById('fSup').value.trim(),detalle=texto.value.trim(),btn=document.getElementById('submitBtn');
+  const sup=document.getElementById('fSup').value.trim(),novedad=texto.value.trim(),btn=document.getElementById('submitBtn');
   if(!sup){toast('Indica el supervisor',true);return;}
   if(!instSel){toast('Selecciona la instalación',true);return;}
-  if(estadoNovedad==='con'&&!detalle){toast('Describe la novedad',true);return;}
+  // Checklist obligatorio: todos los ítems respondidos
+  const faltan=CHK_ITEMS.filter(it=>!chkState[it.id]);
+  if(faltan.length){toast(`Completa el checklist (faltan ${faltan.length})`,true);document.getElementById('chk_'+faltan[0].id).scrollIntoView({behavior:'smooth',block:'center'});return;}
+  // Si hay 'No conforme', exigir su observación
+  const sinObs=CHK_ITEMS.filter(it=>chkState[it.id]==='NC'&&!(chkObs[it.id]||'').trim());
+  if(sinObs.length){toast('Detalla el motivo de cada "No conforme"',true);document.getElementById('obs_'+sinObs[0].id).querySelector('textarea').focus();return;}
   const r=evalPresencia();
   if(r.tipo==='sinPos'){toast('Valida tu ubicación primero',true);updatePresencia();return;}
   if(recording)stopRec();
   const puesto=document.getElementById('fPuesto').value.trim()||'—';
   const nombreInst=instSel==='otro'?'Otro (sin perímetro)':instSel.nombre;
   const cliente=instSel==='otro'?'—':instSel.cliente;
+  const cl=checklistData();
+  const hayNoConf=cl.some(c=>c.estado==='NC');
+  const conNovedad=hayNoConf||!!novedad;
+  const detalleCompuesto=componerDetalle(novedad);
   const payload={token:TOKEN,ronda:{
     instalacionId:(instSel==='otro'?'':instSel.id),instalacion:nombreInst,
     lat:posSup.lat,lng:posSup.lng,acc:posSup.acc,
-    conNovedad:estadoNovedad==='con',detalle:detalle,puesto:puesto
+    conNovedad:conNovedad,detalle:detalleCompuesto,puesto:puesto,
+    checklist:cl,noConforme:hayNoConf
   }};
   btn.disabled=true;btn.textContent='Registrando…';
   let res;
@@ -668,15 +723,15 @@ document.getElementById('submitBtn').addEventListener('click',async()=>{
   const ahora=new Date();
   // El SERVIDOR es la autoridad: usamos su veredicto de geocerca.
   const ronda={folio:res.folio,rechazada:res.rechazada,supervisor:sup,cliente,instalacion:nombreInst,puesto,
-    conNovedad:(!res.rechazada&&estadoNovedad==='con'),
-    detalle:res.rechazada?`Intento FUERA del perímetro (a ${res.dist} m; perímetro ${res.radio} m).`:(estadoNovedad==='con'?detalle:'Sin novedad'),
+    conNovedad:(!res.rechazada&&conNovedad),
+    detalle:res.rechazada?`Intento FUERA del perímetro (a ${res.dist} m; perímetro ${res.radio} m).`:detalleCompuesto,
     geo:{...posSup},dist:res.dist,radio:res.radio,
     fechaISO:ahora.toISOString(),horaTexto:ahora.toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})};
   rondas.unshift(ronda);renderSup();if(document.getElementById('jorMapWrap').classList.contains('show'))refreshJornada();
   if(res.rechazada){toast('⛔ Fuera de perímetro: bloqueado y notificado',true);}
-  else{resetSupForm();toast(`Ronda registrada · ${ronda.folio}`);}
+  else{resetSupForm();toast(hayNoConf?`Registrada con no conformidades · ${ronda.folio}`:`Ronda registrada · ${ronda.folio}`);}
 });
-function resetSupForm(){texto.value='';interimEl.textContent='';document.getElementById('fPuesto').value='';document.getElementById('fInst').value='';instSel=null;posSup=null;if(youMarker){capMap.removeLayer(youMarker);youMarker=null;}drawInstalacion();updatePresencia();setEstado('sin');}
+function resetSupForm(){texto.value='';interimEl.textContent='';document.getElementById('fPuesto').value='';document.getElementById('fInst').value='';instSel=null;posSup=null;if(youMarker){capMap.removeLayer(youMarker);youMarker=null;}drawInstalacion();updatePresencia();resetChecklist();}
 function renderSup(){
   const list=document.getElementById('regList'),val=rondas.filter(r=>!r.rechazada);
   document.getElementById('cRondas').textContent=val.length;
@@ -1116,5 +1171,5 @@ function notaAuto(){return 'Nota: las recomendaciones se generan automáticament
 
 /* ====================== INIT ====================== */
 window.addEventListener('load',()=>{initCapMap();initAdminMap();drawInstalacion();});
-setEstado('sin');renderSup();
+renderSup();
 </script>
