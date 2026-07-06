@@ -136,6 +136,30 @@
   .chk-obs{max-height:0;overflow:hidden;transition:max-height .25s ease}.chk-obs.open{max-height:140px;margin-top:9px}
   .chk-obs textarea{width:100%;min-height:54px;border:1.5px solid #e7b6b2;border-radius:8px;padding:9px 11px;font-family:inherit;font-size:13px;resize:vertical;box-sizing:border-box}
   .chk-resumen{font-size:12.5px;color:var(--muted);margin:2px 0 4px}
+  .form-grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:6px 0 4px}
+  .score-bar{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;background:linear-gradient(135deg,var(--brand-dark,#16210f),var(--pk-green-deep,#24401F));border-radius:12px;padding:14px 16px;margin:14px 0 6px}
+  .score-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+  .score-item .sv{font-family:'Saira',sans-serif;font-weight:700;font-size:24px;color:#fff;line-height:1}
+  .score-item .sk{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--laurel-soft,#A8C19A)}
+  .dim-block{margin:16px 0 4px}
+  .dim-title{font-family:'Saira',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:#fff;background:var(--pk-green-deep,#24401F);border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center}
+  .dim-title .dpct{font-size:12px;color:var(--laurel-soft,#A8C19A)}
+  .pauta-item{border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin:8px 0;background:#fff}
+  .pauta-item.nc{border-color:#e7b6b2;background:#fdf6f5}.pauta-item.crit{border-left:4px solid var(--urgent)}
+  .pi-top{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
+  .pi-n{font-family:'Saira',sans-serif;font-weight:700;font-size:12px;color:#fff;background:var(--pk-green);border-radius:6px;min-width:24px;height:22px;display:grid;place-items:center;flex:0 0 auto}
+  .pi-peso{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:20px;flex:0 0 auto}
+  .pi-peso.p3{background:#fdecea;color:var(--urgent-dark)}.pi-peso.p2{background:#fbf0dc;color:#8a5a12}.pi-peso.p1{background:#eef1ea;color:var(--pk-green-dark)}
+  .pi-q{font-size:13.5px;color:var(--ink);font-weight:600;line-height:1.35;flex:1}
+  .pi-verif{font-size:11.5px;color:var(--muted);margin:0 0 9px 32px;line-height:1.35}
+  .pi-opts{display:flex;gap:6px;margin-left:32px;flex-wrap:wrap}
+  .pi-opts button{font-family:'Saira',sans-serif;font-weight:700;font-size:12px;padding:8px 14px;cursor:pointer;background:#fff;border:1.5px solid var(--line);border-radius:8px;color:var(--muted);transition:all .12s;min-width:46px}
+  .pi-opts button.sc{background:var(--pk-green);border-color:var(--pk-green);color:#fff}
+  .pi-opts button.sp{background:var(--amber);border-color:var(--amber);color:#fff}
+  .pi-opts button.snc{background:var(--urgent);border-color:var(--urgent);color:#fff}
+  .pi-opts button.sna{background:var(--muted);border-color:var(--muted);color:#fff}
+  .pi-obs{max-height:0;overflow:hidden;transition:max-height .25s ease}.pi-obs.open{max-height:140px;margin:9px 0 0 32px}
+  .pi-obs textarea{width:100%;min-height:50px;border:1.5px solid #e7b6b2;border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;resize:vertical;box-sizing:border-box}
   .voice-row{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
   .mic-btn{display:inline-flex;align-items:center;gap:9px;font-family:'Saira',sans-serif;font-weight:600;font-size:14px;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;background:#fff;color:var(--pk-green-dark);border:1.5px solid var(--pk-green);border-radius:30px;padding:11px 18px 11px 14px;min-height:46px}
   .mic-btn .dot{width:12px;height:12px;border-radius:50%;background:var(--pk-green);flex:0 0 auto}
@@ -185,7 +209,7 @@
   .mini-btn:hover{background:#f0f4ee}.mini-btn.del{color:var(--urgent);border-color:#e7b6b2}.mini-btn.del:hover{background:#fdf1f0}
   .mini-btn.warn{color:var(--amber);border-color:#e6cd9c}
   .role-pill{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:3px 9px;border-radius:20px;background:#eef1ea;color:var(--pk-green-dark)}
-  .role-pill.admin{background:var(--pk-green);color:#fff}.role-pill.gerencia{background:var(--amber);color:#fff}
+  .role-pill.admin{background:var(--pk-green);color:#fff}.role-pill.gerencia{background:var(--amber);color:#fff}.role-pill.control{background:var(--pk-teal,#1A7A8A);color:#fff}
 
   /* DASHBOARD */
   .filters{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 18px;margin-bottom:18px;display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-items:end}
@@ -383,7 +407,7 @@
           <div class="field"><label>Nombre completo <span class="req">*</span></label><input type="text" id="uNombre" placeholder="Ej: Juan Pérez"></div>
           <div class="two-col">
             <div class="field"><label>Usuario <span class="req">*</span></label><input type="text" id="uUser" placeholder="jperez" autocapitalize="none"></div>
-            <div class="field"><label>Rol <span class="req">*</span></label><select id="uRol"><option value="supervisor">Supervisor</option><option value="gerencia">Gerencia</option><option value="admin">Administrador</option></select></div>
+            <div class="field"><label>Rol <span class="req">*</span></label><select id="uRol"><option value="supervisor">Supervisor</option><option value="control">Control Central</option><option value="gerencia">Gerencia</option><option value="admin">Administrador</option></select></div>
           </div>
           <div class="field"><label>Contraseña <span class="req">*</span></label><input type="text" id="uPass" placeholder="Contraseña inicial"><p class="map-hint">El usuario podrá cambiarla luego (en el backend). Aquí se guarda en claro solo por ser demostración.</p></div>
           <button class="submit-btn" id="uSave">Crear usuario</button>
@@ -422,8 +446,34 @@
   </main>
 </div>
 
+<div id="viewControl" style="display:none">
+  <main>
+    <div class="cap-card">
+      <div class="cap-head"><h2>Pauta de Control de Supervisión</h2><p class="cap-sub">Instrumento de control en terreno · Ley 21.659 · DS 209/2024 · RIOHS</p></div>
+      <div class="form-grid2">
+        <div class="field"><label>Supervisor(a) controlado(a) <span class="req">*</span></label><input type="text" id="cSup" placeholder="Nombre del supervisor"></div>
+        <div class="field"><label>RUT</label><input type="text" id="cRut" placeholder="12.345.678-9"></div>
+        <div class="field"><label>Instalación / Mandante <span class="req">*</span></label><input type="text" id="cInst" placeholder="Instalación o cliente" list="clientes"></div>
+        <div class="field"><label>Tipo de control <span class="req">*</span></label><select id="cTipo"><option value="Programado">Programado</option><option value="Sorpresa">Sorpresa</option></select></div>
+        <div class="field"><label>Controlador</label><input type="text" id="cControlador" readonly></div>
+        <div class="field"><label>Fecha</label><input type="text" id="cFecha" readonly></div>
+      </div>
+      <div class="score-bar" id="scoreBar">
+        <div class="score-item"><span class="sv" id="scPct">—</span><span class="sk">Cumplimiento</span></div>
+        <div class="score-item"><span class="sv" id="scCal" style="font-size:16px">—</span><span class="sk">Calificación</span></div>
+        <div class="score-item"><span class="sv" id="scCrit" style="color:var(--urgent)">0</span><span class="sk">Hallazgos críticos</span></div>
+        <div class="score-item"><span class="sv" id="scResp">0/35</span><span class="sk">Aspectos evaluados</span></div>
+      </div>
+      <div class="chk-resumen" style="margin-top:6px">Marca cada aspecto: <b>C</b> Cumple · <b>P</b> Parcial · <b>NC</b> No cumple · <b>NA</b> No aplica. El peso (1–3) indica criticidad. Un peso 3 marcado NC es hallazgo crítico.</div>
+      <div id="pautaWrap"></div>
+      <div class="field" style="margin-top:14px"><label>Observaciones generales del control</label><textarea id="cObs" placeholder="Síntesis, contexto y hallazgos relevantes del control…"></textarea></div>
+      <button class="submit-btn" id="cSubmit" style="margin-top:14px">Registrar control</button>
+    </div>
+  </main>
+</div>
+
 <footer>
-  Demostración front-end. Usuarios, instalaciones y datos del dashboard son de prueba y vivirán en el backend (Apps Script + Google Sheets, sin costos). El control de presencia y la autenticación se validan del lado del servidor en producción.
+  Sistema de Control de Supervisión · Seguridad PK SpA · Uso interno. La autenticación y las validaciones se realizan del lado del servidor.
 </footer>
 
 <button class="fab" id="fab" title="Reportar emergencia"><span class="ic">⚠</span><small>SOS</small></button>
@@ -485,7 +535,7 @@ const instalaciones=[];
 
 /* Usuarios — se llenan desde el backend (rol admin) */
 const usuarios=[];
-const ROL_LBL={admin:'Administrador',gerencia:'Gerencia',supervisor:'Supervisor'};
+const ROL_LBL={admin:'Administrador',gerencia:'Gerencia',supervisor:'Supervisor',control:'Control Central'};
 
 /* Rondas: live (sesión supervisor) + datos del dashboard (desde backend) */
 const rondas=[];        // creadas en esta sesión por el supervisor
@@ -528,7 +578,7 @@ async function cargarInstalaciones(){
   try{const res=await pkApi('instalaciones',{token:TOKEN});if(res.ok){instalaciones.length=0;res.instalaciones.forEach(i=>instalaciones.push({id:i.id,nombre:i.nombre,cliente:i.cliente,codigo:i.codigo,direccion:i.direccion,lat:Number(i.lat),lng:Number(i.lng),radio:Number(i.radio),activa:i.activa===true||String(i.activa).toUpperCase()==='TRUE'}));}}catch(e){console.error(e);}
 }
 function routeRol(rol){
-  ['viewSupervisor','viewAdmin','viewGerencia'].forEach(v=>document.getElementById(v).style.display='none');
+  ['viewSupervisor','viewAdmin','viewGerencia','viewControl'].forEach(v=>{const e=document.getElementById(v);if(e)e.style.display='none';});
   document.getElementById('fab').classList.remove('show');
   const sub=document.getElementById('hSub');
   if(rol==='supervisor'){
@@ -544,6 +594,9 @@ function routeRol(rol){
   }else if(rol==='gerencia'){
     document.getElementById('viewGerencia').style.display='';sub.textContent='Seguridad PK · Tablero de control';
     initDashboard();
+  }else if(rol==='control'){
+    document.getElementById('viewControl').style.display='';sub.textContent='Seguridad PK · Control de Supervisión';
+    initControl();
   }
 }
 function logout(){TOKEN=null;sesion=null;document.getElementById('userChip').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('liUser').value='';document.getElementById('liPass').value='';document.getElementById('liErr').textContent='';}
@@ -745,6 +798,119 @@ let jorMap,jorInit=false,jorLayer;
 document.getElementById('jorMapBtn').addEventListener('click',()=>{const w=document.getElementById('jorMapWrap'),sh=w.classList.toggle('show');if(sh){if(!jorInit)initJor();else{setTimeout(()=>jorMap.invalidateSize(),200);refreshJornada();}}});
 function initJor(){jorMap=L.map('jorMap',{zoomControl:true}).setView(DEFAULT_CENTER,11);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'}).addTo(jorMap);jorLayer=L.layerGroup().addTo(jorMap);jorInit=true;setTimeout(()=>{jorMap.invalidateSize();refreshJornada();},200);}
 function refreshJornada(){if(!jorInit)return;jorLayer.clearLayers();const pts=rondas.filter(r=>r.geo);if(!pts.length)return;const ll=[];pts.forEach(r=>{const m=L.marker([r.geo.lat,r.geo.lng],{icon:(r.rechazada||r.conNovedad)?emPin:pkPin}).bindPopup(`<b>${esc(r.folio)}</b><br>${esc(r.instalacion)}<br>${r.rechazada?'⛔ Fuera de perímetro':(r.conNovedad?'⚠ Con novedad':'Sin novedad')} · ${r.horaTexto}`);jorLayer.addLayer(m);ll.push([r.geo.lat,r.geo.lng]);});if(ll.length===1)jorMap.setView(ll[0],15);else jorMap.fitBounds(ll,{padding:[30,30]});}
+/* ================= CONTROL DE SUPERVISIÓN (pauta) ================= */
+const PAUTA=[
+ {d:'D1. Presencia y disciplina del servicio (supervisor)',items:[
+   {n:1,peso:3,t:'Supervisor presente en la instalación en el horario comprometido y ubicable/operativo',v:'Observación directa · registro de ingreso · contraste con programación de turnos'},
+   {n:2,peso:1,t:'Uniforme institucional completo y presentación personal acorde al cargo',v:'Observación directa · registro fotográfico'},
+   {n:3,peso:2,t:'Porta credencial OS-10 vigente, radio operativa y libreta de novedades',v:'Observación directa · verificación de vigencia de la credencial OS-10'}]},
+ {d:'D2. Supervisión y control del personal de turno',items:[
+   {n:4,peso:3,t:'Dotación del turno completa, sin puestos descubiertos',v:'Contraste planilla de turnos vs. presencia real en cada puesto'},
+   {n:5,peso:2,t:'Asistencia y puntualidad del personal registradas y controladas',v:'Registro de asistencia / relevo · observación directa'},
+   {n:6,peso:2,t:'Personal distribuido en puestos y rondas conforme a la pauta del servicio',v:'Pauta del servicio vs. ubicación real del personal'},
+   {n:7,peso:2,t:'Guardias con uniforme, EPP y presentación conforme (incl. chaleco anticorte donde aplica)',v:'Observación directa · EPP asignado según IPER'}]},
+ {d:'D3. Control de acceso',items:[
+   {n:8,peso:2,t:'Registro de control de acceso peatonal completo y al día',v:'Revisión del registro / bitácora de acceso'},
+   {n:9,peso:2,t:'Control de acceso vehicular con registro (patente, conductor, motivo)',v:'Revisión del registro vehicular'},
+   {n:10,peso:2,t:'Aplicación efectiva de las consignas de acceso del mandante',v:'Observación del procedimiento · consignas vigentes del puesto'}]},
+ {d:'D4. Rondas y vigilancia operativa',items:[
+   {n:11,peso:3,t:'Rondas realizadas según frecuencia y ruta programadas, con puntos críticos cubiertos',v:'Registro de rondas (bitácora / RFID / NFC / QR) · observación'},
+   {n:12,peso:2,t:'Registro de rondas trazable y verificable (hora, punto, responsable)',v:'Revisión del registro físico o digital de rondas'}]},
+ {d:'D5. Monitoreo, equipos y tecnología',items:[
+   {n:13,peso:3,t:'CCTV operativo, con grabación activa y sin cámaras fuera de servicio no reportadas',v:'Revisión en monitor / NVR · contraste con reporte de fallas'},
+   {n:14,peso:2,t:'Sistemas de alarma y control de acceso operativos',v:'Verificación / prueba visual · registro de estado'},
+   {n:15,peso:2,t:'Comunicaciones operativas (radios cargadas y en canal, teléfono de respaldo)',v:'Prueba de radio · observación directa'},
+   {n:16,peso:2,t:'Fallas técnicas detectadas, registradas y reportadas oportunamente',v:'Libro de novedades · reporte a jefatura / mandante'}]},
+ {d:'D6. Registros y documentación operativa',items:[
+   {n:17,peso:3,t:'Libro de novedades conforme a reglas (tinta indeleble, sin borrones ni hojas arrancadas, fecha/hora/firma por anotación)',v:'Revisión directa del libro de novedades'},
+   {n:18,peso:2,t:'Novedades relevantes del turno efectivamente registradas (relevo, ingresos no rutinarios, incidentes)',v:'Libro de novedades vs. observación / consulta'},
+   {n:19,peso:2,t:'Relevo de turno documentado (entrega y recepción de puesto y novedades)',v:'Registro de relevo de turno'},
+   {n:20,peso:2,t:'Informes de incidente elaborados cuando corresponde, con estructura mínima (5W)',v:'Revisión de los informes del período'}]},
+ {d:'D7. Respuesta a emergencias y contingencias',items:[
+   {n:21,peso:3,t:'El supervisor conoce y explica los protocolos de emergencia (incendio, médica, sismo, robo/asalto, paquete sospechoso)',v:'Entrevista al supervisor · preguntas de verificación'},
+   {n:22,peso:2,t:'Números de emergencia y plan de evacuación disponibles y conocidos (133/132/131; vías y zona segura)',v:'Observación de plan/señalética · entrevista'},
+   {n:23,peso:2,t:'Medios de emergencia operativos y vigentes (extintores con carga/fecha, botiquín, señalética, luces)',v:'Inspección física de los medios'}]},
+ {d:'D8. Capacitación y desarrollo del personal',items:[
+   {n:24,peso:2,t:'Inducción al personal nuevo realizada y registrada (consignas y procedimientos del puesto)',v:'Registro de inducción · entrevista a guardia nuevo'},
+   {n:25,peso:1,t:'Refuerzo periódico de procedimientos / charlas / simulacros, con registro',v:'Registro de capacitación o charlas operativas'}]},
+ {d:'D9. Relación con el mandante y consignas del cliente',items:[
+   {n:26,peso:2,t:'Comunicación regular y formal con la contraparte del mandante',v:'Registro de coordinación · entrevista a la contraparte cuando sea posible'},
+   {n:27,peso:2,t:'Requerimientos del mandante atendidos y trazables',v:'Registro de requerimientos y respuestas'},
+   {n:28,peso:2,t:'Consignas específicas del puesto/instalación vigentes, disponibles y conocidas por el personal',v:'Revisión de consignas · entrevista a guardias'}]},
+ {d:'D10. Gestión administrativo-laboral y cumplimiento documental',items:[
+   {n:29,peso:3,t:'Documentación legal-laboral del personal al día (liquidaciones firmadas, cotizaciones Previred, F30-1, comprobantes)',v:'Revisión documental · contraste con RRHH'},
+   {n:30,peso:2,t:'Constancias de entrega de EPP y de capacitación al día',v:'Revisión de constancias firmadas'},
+   {n:31,peso:2,t:'Licencias médicas gestionadas y reemplazos sin discontinuidad del servicio',v:'Registro de licencias y reemplazos vs. cobertura real'},
+   {n:32,peso:2,t:'Régimen de jornada y descansos respetado (4×4 / descansos entre turnos)',v:'Planilla de turnos vs. asistencia efectiva'}]},
+ {d:'D11. Reporte a la jefatura, liderazgo y conducta',items:[
+   {n:33,peso:2,t:'Informa oportunamente a la jefatura novedades, incumplimientos y requerimientos; respeta la cadena de mando',v:'Registros de reporte · entrevista a jefatura'},
+   {n:34,peso:2,t:'Manejo del personal y resolución de conflictos adecuados; clima de trabajo respetuoso',v:'Observación directa · entrevistas a guardias'},
+   {n:35,peso:3,t:'Trato conforme a DD.HH. y uso proporcional de la fuerza; protocolos diferenciados con grupos de especial protección',v:'Entrevista · revisión de eventuales eventos o denuncias'}]}
+];
+const PAUTA_TOTAL=PAUTA.reduce((a,d)=>a+d.items.length,0);
+let ctlState={},ctlObs={},controlInit=false;
+function initControl(){
+  document.getElementById('cControlador').value=sesion.nombre;
+  document.getElementById('cFecha').value=new Date().toLocaleDateString('es-CL');
+  if(!controlInit){renderPauta();document.getElementById('cSubmit').addEventListener('click',registrarControl);controlInit=true;}
+  refrescarClientes();
+}
+function renderPauta(){
+  const w=document.getElementById('pautaWrap');
+  w.innerHTML=PAUTA.map(dim=>`<div class="dim-block"><div class="dim-title"><span>${esc(dim.d)}</span><span class="dpct" id="dpct_${dim.d.slice(0,3)}"></span></div>${dim.items.map(it=>`
+    <div class="pauta-item" id="pi_${it.n}"><div class="pi-top"><span class="pi-n">${it.n}</span><span class="pi-peso p${it.peso}">Peso ${it.peso}</span><span class="pi-q">${esc(it.t)}</span></div>
+    <div class="pi-verif">Verificación: ${esc(it.v)}</div>
+    <div class="pi-opts"><button type="button" data-n="${it.n}" data-v="C">C</button><button type="button" data-n="${it.n}" data-v="P">P</button><button type="button" data-n="${it.n}" data-v="NC">NC</button><button type="button" data-n="${it.n}" data-v="NA">NA</button></div>
+    <div class="pi-obs" id="piobs_${it.n}"><textarea data-obs="${it.n}" placeholder="Observación / hallazgo…"></textarea></div></div>`).join('')}</div>`).join('');
+  w.querySelectorAll('.pi-opts button').forEach(b=>b.addEventListener('click',()=>setPauta(+b.dataset.n,b.dataset.v)));
+  w.querySelectorAll('textarea[data-obs]').forEach(t=>t.addEventListener('input',e=>{ctlObs[+e.target.dataset.obs]=e.target.value;}));
+  actualizarScore();
+}
+function pesoDe(n){for(const d of PAUTA)for(const it of d.items)if(it.n===n)return it.peso;return 0;}
+function setPauta(n,v){
+  ctlState[n]=v;
+  const item=document.getElementById('pi_'+n);
+  item.querySelectorAll('.pi-opts button').forEach(b=>{b.classList.remove('sc','sp','snc','sna');if(b.dataset.v===v)b.classList.add(v==='C'?'sc':v==='P'?'sp':v==='NC'?'snc':'sna');});
+  const esNC=v==='NC';item.classList.toggle('nc',esNC);
+  item.classList.toggle('crit',esNC&&pesoDe(n)===3);
+  document.getElementById('piobs_'+n).classList.toggle('open',esNC);
+  actualizarScore();
+}
+function calcControl(){
+  let aplic=0,obt=0,crit=0,resp=0;const listaCrit=[];
+  PAUTA.forEach(d=>d.items.forEach(it=>{const r=ctlState[it.n];if(!r)return;resp++;if(r==='NA')return;aplic+=it.peso;if(r==='C')obt+=it.peso;else if(r==='P')obt+=it.peso*0.5;else if(r==='NC'&&it.peso===3){crit++;listaCrit.push(it);}}));
+  const pct=aplic?Math.round(obt/aplic*100):0;
+  const cal=pct>=90?'Óptimo':pct>=75?'Adecuado':pct>=60?'Con observaciones':'Deficiente / crítico';
+  return {pct,cal,crit,resp,listaCrit};
+}
+function actualizarScore(){
+  const c=calcControl();
+  document.getElementById('scPct').textContent=c.resp?c.pct+'%':'—';
+  document.getElementById('scCal').textContent=c.resp?c.cal:'—';
+  document.getElementById('scCrit').textContent=c.crit;
+  document.getElementById('scResp').textContent=c.resp+'/'+PAUTA_TOTAL;
+  PAUTA.forEach(d=>{let a=0,o=0,ok=false;d.items.forEach(it=>{const r=ctlState[it.n];if(r&&r!=='NA'){ok=true;a+=it.peso;if(r==='C')o+=it.peso;else if(r==='P')o+=it.peso*0.5;}});const el=document.getElementById('dpct_'+d.d.slice(0,3));if(el)el.textContent=ok&&a?Math.round(o/a*100)+'%':'';});
+}
+function itemsPayload(){const out=[];PAUTA.forEach(d=>d.items.forEach(it=>out.push({n:it.n,dim:d.d.slice(0,3),texto:it.t,peso:it.peso,resultado:ctlState[it.n]||null,obs:(ctlState[it.n]==='NC'?(ctlObs[it.n]||'').trim():'')})));return out;}
+async function registrarControl(){
+  const sup=document.getElementById('cSup').value.trim(),inst=document.getElementById('cInst').value.trim(),btn=document.getElementById('cSubmit');
+  if(!sup){toast('Indica el supervisor controlado',true);return;}
+  if(!inst){toast('Indica la instalación/mandante',true);return;}
+  const faltan=[];PAUTA.forEach(d=>d.items.forEach(it=>{if(!ctlState[it.n])faltan.push(it.n);}));
+  if(faltan.length){toast(`Faltan ${faltan.length} aspecto(s) por evaluar`,true);document.getElementById('pi_'+faltan[0]).scrollIntoView({behavior:'smooth',block:'center'});return;}
+  const sinObs=[];PAUTA.forEach(d=>d.items.forEach(it=>{if(ctlState[it.n]==='NC'&&!(ctlObs[it.n]||'').trim())sinObs.push(it.n);}));
+  if(sinObs.length){toast('Detalla la observación de cada "No cumple"',true);document.getElementById('piobs_'+sinObs[0]).querySelector('textarea').focus();return;}
+  const c=calcControl();
+  const payload={token:TOKEN,control:{supervisor:sup,rut:document.getElementById('cRut').value.trim(),instalacion:inst,tipo:document.getElementById('cTipo').value,observaciones:document.getElementById('cObs').value.trim(),items:itemsPayload()}};
+  btn.disabled=true;btn.textContent='Registrando…';
+  let res;
+  try{res=await pkApi('registrarControl',payload);}catch(e){btn.disabled=false;btn.textContent='Registrar control';toast('Sin conexión con el servidor',true);return;}
+  btn.disabled=false;btn.textContent='Registrar control';
+  if(!res||!res.ok){toast(res&&res.error?res.error:'No se pudo registrar',true);return;}
+  toast(`Control registrado · ${res.folio} · ${res.pct}% (${res.calificacion})`);
+  resetControl();
+}
+function resetControl(){ctlState={};ctlObs={};['cSup','cRut','cInst','cObs'].forEach(id=>document.getElementById(id).value='');document.getElementById('cTipo').value='Programado';renderPauta();window.scrollTo({top:0,behavior:'smooth'});}
 /* ================= REPORTES (documento maquetado) ================= */
 const reportModalBg=document.getElementById('reportModalBg');
 let currentReport={meta:{titulo:'Reporte',lineas:[]},blocks:[]};
