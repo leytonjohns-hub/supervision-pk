@@ -285,6 +285,7 @@
   table.rep td.num,table.rep th.num{text-align:right}
   .flag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:20px;margin-left:6px}
   .flag.rev{background:#fdecea;color:var(--urgent-dark)}.flag.nov{background:#fbf0dc;color:#8a5a12}
+  .rep td.nc{color:var(--urgent-dark);font-weight:700}
   .badge-cell{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700}
   .b-sin{background:#e6efe3;color:var(--pk-green-dark)}.b-con{background:var(--amber);color:#fff}.b-rej{background:var(--urgent);color:#fff}
   .alert-box{background:#fdf1f0;border:1px solid #e7b6b2;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--urgent-dark);margin-top:10px}
@@ -448,6 +449,10 @@
 
 <div id="viewControl" style="display:none">
   <main>
+    <div class="cap-card" style="margin-bottom:16px">
+      <div class="cap-head" style="display:flex;justify-content:space-between;align-items:center"><div><h2>Controles registrados</h2><p class="cap-sub">Abre el informe de cada control aplicado</p></div><button class="ghost" id="ctlRefresh" style="flex:0 0 auto">↻ Actualizar</button></div>
+      <div id="ctlList"><p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Cargando…</p></div>
+    </div>
     <div class="cap-card">
       <div class="cap-head"><h2>Pauta de Control de Supervisión</h2><p class="cap-sub">Instrumento de control en terreno · Ley 21.659 · DS 209/2024 · RIOHS</p></div>
       <div class="form-grid2">
@@ -853,6 +858,7 @@ function initControl(){
   document.getElementById('cControlador').value=sesion.nombre;
   document.getElementById('cFecha').value=new Date().toLocaleDateString('es-CL');
   if(!controlInit){renderPauta();document.getElementById('cSubmit').addEventListener('click',registrarControl);controlInit=true;}
+  loadControles();
   refrescarClientes();
 }
 function renderPauta(){
@@ -908,9 +914,89 @@ async function registrarControl(){
   btn.disabled=false;btn.textContent='Registrar control';
   if(!res||!res.ok){toast(res&&res.error?res.error:'No se pudo registrar',true);return;}
   toast(`Control registrado · ${res.folio} · ${res.pct}% (${res.calificacion})`);
-  resetControl();
+  resetControl();loadControles();
 }
 function resetControl(){ctlState={};ctlObs={};['cSup','cRut','cInst','cObs'].forEach(id=>document.getElementById(id).value='');document.getElementById('cTipo').value='Programado';renderPauta();window.scrollTo({top:0,behavior:'smooth'});}
+
+/* ----- Controles registrados + informe ----- */
+let controles=[];
+async function loadControles(){
+  const cont=document.getElementById('ctlList');
+  let res;try{res=await pkApi('controles',{token:TOKEN});}catch(e){cont.innerHTML='<p style="color:var(--urgent);font-size:13px;text-align:center;padding:12px">Sin conexión con el servidor.</p>';return;}
+  if(!res||!res.ok){cont.innerHTML='<p style="color:var(--urgent);font-size:13px;text-align:center;padding:12px">No se pudieron cargar los controles.</p>';return;}
+  controles=(res.controles||[]).slice().reverse();
+  renderCtlList();
+}
+function bandaCls(pct){return pct>=90?'b-sin':pct>=75?'b-sin':pct>=60?'b-con':'b-rej';}
+function renderCtlList(){
+  const cont=document.getElementById('ctlList');
+  if(!controles.length){cont.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Aún no hay controles registrados.</p>';return;}
+  cont.innerHTML=controles.map((c,idx)=>{const pct=Number(c.pct)||0;const cr=Number(c.criticos)||0;const fecha=c.fecha?new Date(c.fecha).toLocaleDateString('es-CL'):'';
+    return `<div class="row-item"><div class="row-top"><span class="row-name">${esc(c.supervisor||'—')}</span><span class="badge-cell ${bandaCls(pct)}">${pct}% · ${esc(c.calificacion||'')}</span></div>
+    <div class="row-meta"><span>${esc(c.instalacion||'')}</span><span>${esc(c.tipo||'')} · ${esc(fecha)}</span>${cr>0?`<span style="color:var(--urgent);font-weight:700">⚠ ${cr} crítico(s)</span>`:''}</div>
+    <div class="row-btns"><span style="font-size:11px;color:var(--muted)">${esc(c.folio||'')}</span><button class="mini-btn" onclick="verInformeControl(${idx})">📄 Ver informe</button></div></div>`;}).join('');
+}
+document.getElementById('ctlRefresh').addEventListener('click',loadControles);
+
+function medidasSugeridas(pct,criticos){
+  if(criticos>0)return{clase:'red',txt:'Resultado con hallazgos críticos (aspectos de peso 3 en «No cumple»). Amerita intervención inmediata y evaluación de medida disciplinaria conforme al RIOHS, con registro en el plan de acción. La procedencia y el grado de la medida (amonestación verbal, escrita, multa o término) los define la Contraloría / RRHH según el historial del supervisor y el marco legal aplicable.'};
+  if(pct>=90)return{clase:'ok',txt:'Desempeño óptimo. Mantener el estándar del servicio y entregar retroalimentación positiva al supervisor.'};
+  if(pct>=75)return{clase:'ok',txt:'Desempeño adecuado con observaciones puntuales. Corregir los aspectos observados y verificar su regularización en el próximo control.'};
+  if(pct>=60)return{clase:'amber',txt:'Desempeño con observaciones. Elaborar un plan de mejora formal con responsables y plazos, y reevaluar en un nuevo control dentro del período.'};
+  return{clase:'red',txt:'Desempeño deficiente. Amerita intervención y evaluación de medida disciplinaria conforme al RIOHS, con plan de acción formal. La procedencia y el grado de la medida los define la Contraloría / RRHH según el historial y el marco legal.'};
+}
+const RES_LBL={C:'Cumple',P:'Parcial',NC:'No cumple',NA:'No aplica'};
+function verInformeControl(idx){
+  const c=controles[idx];if(!c)return;
+  let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){items=[];}
+  openReport(informeControlModel(c,items));
+}
+function informeControlModel(c,items){
+  const pct=Number(c.pct)||0,crit=Number(c.criticos)||0;
+  const fecha=c.fecha?new Date(c.fecha).toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'}):'';
+  const evaluados=items.filter(i=>i.resultado);
+  const nc=items.filter(i=>i.resultado==='NC'),parc=items.filter(i=>i.resultado==='P'),criticos=nc.filter(i=>Number(i.peso)===3);
+  // Resumen por dimensión
+  const dims={};
+  PAUTA.forEach(d=>{dims[d.d.slice(0,3)]={nom:d.d,a:0,o:0,C:0,P:0,NC:0,NA:0,any:false};});
+  items.forEach(it=>{const k=it.dim;if(!dims[k])return;const r=it.resultado;if(!r)return;dims[k].any=true;if(r==='NA'){dims[k].NA++;return;}dims[k][r]++;dims[k].a+=Number(it.peso);if(r==='C')dims[k].o+=Number(it.peso);else if(r==='P')dims[k].o+=Number(it.peso)*0.5;});
+  const dimRows=Object.keys(dims).map(k=>{const d=dims[k];const p=d.any&&d.a?Math.round(d.o/d.a*100)+'%':'—';return [{v:d.nom},{v:p},{v:d.C},{v:d.P},{v:d.NC,cls:d.NC?'nc':''},{v:d.NA}];});
+  // Aspectos observados (NC y P)
+  const obsRows=items.filter(i=>i.resultado==='NC'||i.resultado==='P').map(i=>{
+    const critFlag=(i.resultado==='NC'&&Number(i.peso)===3)?{flag:{cls:'rev',txt:'CRÍTICO'}}:{};
+    return [{v:i.n},{v:i.texto,...critFlag},{v:i.peso},{v:RES_LBL[i.resultado]||i.resultado,cls:i.resultado==='NC'?'nc':''},{v:i.obs||'—'}];
+  });
+  const med=medidasSugeridas(pct,crit);
+  const blocks=[
+    {h:'Resumen del control',type:'resumen',text:`Control ${c.tipo||''} aplicado al supervisor ${c.supervisor||''}${c.rut?(' (RUT '+c.rut+')'):''} en ${c.instalacion||''}, por ${c.controlador||''}. Resultado global: ${pct}% de cumplimiento ponderado — calificación «${c.calificacion||''}». Se evaluaron ${evaluados.length} de ${items.length} aspectos, con ${crit} hallazgo(s) crítico(s), ${nc.length} «No cumple» y ${parc.length} «Parcial».`},
+    {h:'Indicadores',type:'kpis',items:[
+      {v:pct+'%',k:'Cumplimiento ponderado'},
+      {v:crit,k:'Hallazgos críticos',cls:crit?'red':''},
+      {v:nc.length,k:'No cumple',cls:nc.length?'amber':''},
+      {v:parc.length,k:'Parcial'}
+    ]},
+    {h:'Resultado por dimensión',type:'table',head:['Dimensión','Cumpl.','C','P','NC','NA'],leftCols:[0],rows:dimRows},
+  ];
+  if(obsRows.length){
+    blocks.push({h:'Aspectos observados (No cumple / Parcial)',type:'table',head:['N°','Aspecto controlado','Peso','Resultado','Observación / hallazgo'],leftCols:[1,4],rows:obsRows});
+  }
+  if(criticos.length){
+    blocks.push({h:'Hallazgos críticos (peso 3 en «No cumple»)',type:'findings',items:criticos.map(i=>({ok:false,text:`Ítem ${i.n} · ${i.texto}${i.obs?(' — '+i.obs):''}`}))});
+  }
+  // Medidas sugeridas
+  const medItems=[{ok:med.clase==='ok',text:med.txt}];
+  nc.forEach(i=>{medItems.push({ok:false,text:`Ítem ${i.n} (peso ${i.peso}): regularizar «${i.texto}»${i.obs?(' — '+i.obs):''}, y verificar en el próximo control.`});});
+  blocks.push({h:'Medidas sugeridas',type:'findings',items:medItems});
+  if(c.observaciones)blocks.push({h:'Observaciones del controlador',type:'resumen',text:c.observaciones});
+  blocks.push({h:'Nota sobre las medidas',type:'resumen',text:'Las medidas indicadas son una sugerencia generada automáticamente a partir de reglas sobre el resultado del control (hallazgos críticos y bandas de cumplimiento). No constituyen una decisión. La procedencia, el grado y la formalización de cualquier medida disciplinaria son atribución de la Contraloría Interna y de RRHH, conforme al RIOHS y al marco legal vigente.'});
+  return {meta:{titulo:'Informe de Control de Supervisión',lineas:[
+    'Supervisor(a) controlado(a): '+(c.supervisor||'—')+(c.rut?(' · RUT '+c.rut):''),
+    'Instalación / Mandante: '+(c.instalacion||'—'),
+    'Tipo de control: '+(c.tipo||'—')+'  ·  Controlador: '+(c.controlador||'—'),
+    'Fecha: '+fecha+'  ·  Folio: '+(c.folio||'—')
+  ]},blocks};
+}
+/* ----- fin controles ----- */
 /* ================= REPORTES (documento maquetado) ================= */
 const reportModalBg=document.getElementById('reportModalBg');
 let currentReport={meta:{titulo:'Reporte',lineas:[]},blocks:[]};
@@ -937,8 +1023,9 @@ function renderBlock(b){
   if(b.type==='resumen')return `<div class="resumen">${esc(b.text)}</div>`;
   if(b.type==='kpis')return `<div class="kpi-row">${b.items.map(k=>`<div class="kpic ${k.cls||''}"><div class="v">${esc(String(k.v))}</div><div class="k">${esc(k.k)}</div>${k.cmp?`<div class="cmp ${k.cmp.dir}">${esc(k.cmp.txt)}</div>`:''}</div>`).join('')}</div>`;
   if(b.type==='table'){
-    const head=b.head.map((h,i)=>`<th class="${i>0?'num':''}">${esc(h)}</th>`).join('');
-    const rows=b.rows.map(r=>`<tr>${r.map((c,i)=>{const o=typeof c==='object'?c:{v:c};const flag=o.flag?`<span class="flag ${o.flag.cls}">${esc(o.flag.txt)}</span>`:'';return `<td class="${i>0?'num':''} ${o.cls||''}">${esc(String(o.v))}${flag}</td>`;}).join('')}</tr>`).join('');
+    const isNum=(i)=>i>0 && !(b.leftCols&&b.leftCols.includes(i));
+    const head=b.head.map((h,i)=>`<th class="${isNum(i)?'num':''}">${esc(h)}</th>`).join('');
+    const rows=b.rows.map(r=>`<tr>${r.map((c,i)=>{const o=typeof c==='object'?c:{v:c};const flag=o.flag?`<span class="flag ${o.flag.cls}">${esc(o.flag.txt)}</span>`:'';return `<td class="${isNum(i)?'num':''} ${o.cls||''}">${esc(String(o.v))}${flag}</td>`;}).join('')}</tr>`).join('');
     return `<table class="rep"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>`;
   }
   if(b.type==='cobertura'){
