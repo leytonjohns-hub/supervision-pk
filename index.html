@@ -152,6 +152,20 @@
   .pi-grav{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 8px;border-radius:20px;flex:0 0 auto}
   .pi-grav.g-L{background:#eef1ea;color:#2E7D32}.pi-grav.g-G{background:#fbf0dc;color:#8a5a12}.pi-grav.g-X{background:#fdecea;color:var(--urgent-dark)}
   .pi-evi{font-size:12px;color:#0f5f6b;background:#e8f4f6;border-radius:7px;padding:7px 10px;margin-bottom:8px;line-height:1.4}
+  .carta-config{background:#f6f8f4;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+  .cc-field{margin-bottom:12px}.cc-field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px}
+  .cc-field select,.cc-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;background:#fff}
+  .cc-field textarea{min-height:60px;resize:vertical}
+  .carta-faltas{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px}
+  .cf-item{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.35}
+  .cf-item input{margin-top:3px;flex:0 0 auto}
+  .cf-g{font-size:10px;font-weight:700;text-transform:uppercase;padding:1px 6px;border-radius:10px;flex:0 0 auto}
+  .cf-g.g-L{background:#eef1ea;color:#2E7D32}.cf-g.g-G{background:#fbf0dc;color:#8a5a12}.cf-g.g-X{background:#fdecea;color:var(--urgent-dark)}
+  #cartaDoc .carta-parr{font-size:14px;line-height:1.7;color:#1a1a1a;text-align:justify;margin:0}
+  #cartaDoc .carta-falta{font-size:13.5px;line-height:1.55;margin:0 0 8px 0;padding-left:14px;border-left:3px solid var(--line)}
+  #cartaDoc .carta-firmas{display:flex;gap:40px;margin-top:36px}
+  #cartaDoc .carta-firma{flex:1;text-align:center}
+  #cartaDoc .carta-firma .ln{border-top:1px solid #333;margin-top:44px;padding-top:6px;font-size:12px;color:#333}
   .pi-peso.p3{background:#fdecea;color:var(--urgent-dark)}.pi-peso.p2{background:#fbf0dc;color:#8a5a12}.pi-peso.p1{background:#eef1ea;color:var(--pk-green-dark)}
   .pi-q{font-size:13.5px;color:var(--ink);font-weight:600;line-height:1.35;flex:1}
   .pi-verif{font-size:11.5px;color:var(--muted);margin:0 0 9px 32px;line-height:1.35}
@@ -527,6 +541,25 @@
   <div class="modal-head"><h3 id="reportTitle">Reporte</h3><button class="x" id="reportX">&times;</button></div>
   <div class="modal-body"><div class="rep-scroll"><div id="reportDoc" class="doc"></div></div></div>
   <div class="modal-foot"><button class="btn-cancel" id="reportClose">Cerrar</button><button class="btn-confirm" style="background:#0e0f0c;flex:1" id="reportCopy">Copiar</button><button class="btn-confirm" style="background:var(--pk-green);flex:1.4" id="reportPdf">⬇ Descargar PDF</button></div>
+</div></div>
+
+<div class="modal-bg" id="cartaModalBg"><div class="modal">
+  <div class="modal-head"><h3 id="cartaTitle">Carta de amonestación (borrador)</h3><button class="x" id="cartaX">&times;</button></div>
+  <div class="modal-body">
+    <div class="carta-config">
+      <div class="cc-field"><label>Tipo de amonestación <span style="font-weight:400;color:var(--muted)">(propuesto según gravedad · editable)</span></label>
+        <select id="cartaTipo">
+          <option value="verbal">Amonestación verbal (con constancia escrita)</option>
+          <option value="escrita">Amonestación escrita</option>
+          <option value="escrita_multa">Amonestación escrita con multa (hasta 25%)</option>
+        </select></div>
+      <div class="cc-field"><label>Faltas a incluir <span style="font-weight:400;color:var(--muted)">(todas por defecto · desmarca para una carta por falta específica)</span></label><div id="cartaFaltas" class="carta-faltas"></div></div>
+      <div class="cc-field"><label>Consideraciones adicionales <span style="font-weight:400;color:var(--muted)">(opcional)</span></label><textarea id="cartaConsid" placeholder="Texto adicional que quieras incorporar al cuerpo de la carta…"></textarea></div>
+      <button class="btn-confirm" id="cartaGen" style="background:var(--pk-teal,#1A7A8A);width:100%">Generar / actualizar carta</button>
+    </div>
+    <div class="rep-scroll"><div id="cartaDoc" class="doc"></div></div>
+  </div>
+  <div class="modal-foot"><button class="btn-cancel" id="cartaClose">Cerrar</button><button class="btn-confirm" style="background:var(--pk-green);flex:1.4" id="cartaPdf">⬇ Descargar PDF</button></div>
 </div></div>
 
 <div class="toast" id="toast"><span class="ck">✓</span><span id="toastMsg">Listo</span></div>
@@ -981,7 +1014,7 @@ function renderCtlList(){
     const badge=(g+x)>0?`<span class="badge-cell b-rej">${g+x} grave(s)+</span>`:(l>0?`<span class="badge-cell b-con">${l} leve(s)</span>`:`<span class="badge-cell b-sin">Sin faltas</span>`);
     return `<div class="row-item"><div class="row-top"><span class="row-name">${esc(c.supervisor||'—')}</span>${badge}</div>
     <div class="row-meta"><span>${esc(c.instalacion||'')}</span><span>${esc(c.tipo||'')} · ${esc(fecha)}</span>${x>0?`<span style="color:var(--urgent);font-weight:700">⚠ ${x} gravísima(s)</span>`:''}</div>
-    <div class="row-btns"><span style="font-size:11px;color:var(--muted)">${esc(c.folio||'')}</span><button class="mini-btn" onclick="verInformeControl(${idx})">📄 Ver informe</button></div></div>`;}).join('');
+    <div class="row-btns"><span style="font-size:11px;color:var(--muted)">${esc(c.folio||'')}</span><button class="mini-btn" onclick="verInformeControl(${idx})">📄 Ver informe</button>${(l+g+x)>0?`<button class="mini-btn" onclick="abrirCarta(${idx})">✉ Carta</button>`:''}</div></div>`;}).join('');
 }
 document.getElementById('ctlRefresh').addEventListener('click',loadControles);
 
@@ -1044,6 +1077,63 @@ function informeControlModel(c,items){
   ]},blocks};
 }
 /* ----- fin controles ----- */
+
+/* ================= CARTA DE AMONESTACIÓN (borrador) ================= */
+const cartaModalBg=document.getElementById('cartaModalBg');
+let cartaCtx=null; // {c, nc:[items NC]}
+const TIPO_TXT={verbal:'AMONESTACIÓN VERBAL',escrita:'AMONESTACIÓN ESCRITA',escrita_multa:'AMONESTACIÓN ESCRITA CON MULTA'};
+function tipoSugerido(nc){if(nc.some(i=>gOf(i)==='X'))return 'escrita_multa';if(nc.some(i=>gOf(i)==='G'))return 'escrita';return 'verbal';}
+function abrirCarta(idx){
+  const c=controles[idx];if(!c)return;
+  let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){items=[];}
+  const nc=items.filter(i=>i.resultado==='NC');
+  if(!nc.length){toast('Este control no tiene incumplimientos para amonestar');return;}
+  cartaCtx={c,nc};
+  // faltas (todas marcadas por defecto)
+  document.getElementById('cartaFaltas').innerHTML=nc.map((i,k)=>{const g=gOf(i);
+    return `<label class="cf-item"><input type="checkbox" class="cf-chk" data-k="${k}" checked><span><span class="cf-g g-${g}">${GRAV_LBL[g]}</span> <b>Ítem ${i.n}.</b> ${esc(i.texto)}</span></label>`;}).join('');
+  document.getElementById('cartaTipo').value=tipoSugerido(nc);
+  document.getElementById('cartaConsid').value='';
+  renderCarta();
+  cartaModalBg.classList.add('show');
+}
+function renderCarta(){
+  if(!cartaCtx)return;
+  const {c,nc}=cartaCtx;
+  const tipo=document.getElementById('cartaTipo').value;
+  const consid=document.getElementById('cartaConsid').value.trim();
+  const sel=[...document.querySelectorAll('.cf-chk')].filter(x=>x.checked).map(x=>nc[+x.dataset.k]);
+  const fechaCtl=c.fecha?new Date(c.fecha).toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'}):'—';
+  const hoy=new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'});
+  const faltasHTML=sel.length?sel.map(i=>{const g=gOf(i);return `<p class="carta-falta"><b>${esc(i.texto)}</b> — Falta <b>${GRAV_LBL[g].toLowerCase()}</b>.${i.obs?(' '+esc(i.obs)+'.'):''} Fundamento: ${esc(SANC_BASE[g])}${i.respaldo?(' Respaldo: '+esc(i.respaldo)+'.'):''}</p>`;}).join(''):'<p class="carta-falta" style="color:var(--urgent)">Selecciona al menos una falta.</p>';
+  let clausula='';
+  if(tipo==='verbal')clausula='La presente amonestación verbal se deja por constancia escrita en su carpeta personal, conforme al artículo 112 del Reglamento Interno de Orden, Higiene y Seguridad.';
+  else if(tipo==='escrita')clausula='La presente amonestación escrita se registra en su carpeta personal, conforme a los artículos 65 bis y 112 del Reglamento Interno. Se le insta a corregir de inmediato las conductas señaladas, bajo apercibimiento de aplicar las medidas que en derecho correspondan en caso de reincidencia.';
+  else clausula='La presente amonestación escrita, con aplicación de una multa de hasta un veinticinco por ciento (25%) de la remuneración diaria conforme al artículo 113 del Reglamento Interno, se registra en su carpeta personal. De la multa podrá reclamarse ante la Inspección del Trabajo dentro del plazo legal de tercero día.';
+  const secs=[];
+  secs.push(`<div class="sec"><p class="carta-parr">San Bernardo, ${hoy}.</p><p class="carta-parr" style="margin-top:10px"><b>Señor(a):</b> ${esc(c.supervisor||'—')}${c.rut?(' · <b>RUT:</b> '+esc(c.rut)):''}<br><b>Cargo:</b> Supervisor(a) de Seguridad · <b>Instalación:</b> ${esc(c.instalacion||'—')}<br><b>Presente.</b></p></div>`);
+  secs.push(`<div class="sec"><p class="carta-parr"><b>Ref.:</b> ${TIPO_TXT[tipo]} — Control de supervisión folio ${esc(c.folio||'—')}, de fecha ${fechaCtl}.</p></div>`);
+  secs.push(`<div class="sec"><p class="carta-parr">Por medio de la presente, la Empresa de Seguridad PK SpA, en ejercicio de sus facultades disciplinarias conforme al Reglamento Interno de Orden, Higiene y Seguridad (RIOHS) y al Código del Trabajo, viene a formular a usted una <b>${TIPO_TXT[tipo]}</b>, fundada en los siguientes hechos constatados en el control de supervisión practicado el ${fechaCtl} en la instalación ${esc(c.instalacion||'—')}:</p></div>`);
+  secs.push(`<div class="sec">${faltasHTML}</div>`);
+  secs.push(`<div class="sec"><p class="carta-parr">${clausula}</p></div>`);
+  if(consid)secs.push(`<div class="sec"><p class="carta-parr">${esc(consid)}</p></div>`);
+  secs.push(`<div class="sec"><p class="carta-parr">Se deja constancia de que usted tiene derecho a formular por escrito los descargos que estime pertinentes respecto de los hechos señalados. La presente medida se adopta sin perjuicio de las demás facultades que la normativa vigente confiere a la Empresa.</p></div>`);
+  secs.push(`<div class="sec"><div class="carta-firmas"><div class="carta-firma"><div class="ln">Empleador / Representante<br>Seguridad PK SpA</div></div><div class="carta-firma"><div class="ln">Trabajador(a)<br>Recibí conforme / Dejo constancia de descargos<br>Nombre, RUT y fecha</div></div></div></div>`);
+  const html=`<div class="doc-head"><img src="${LOGO_DATA}" alt="PK"><div class="ht"><h1>Carta de Amonestación</h1><div class="sub">Seguridad PK SpA</div><div class="per">${TIPO_TXT[tipo]}</div></div></div><div class="doc-body">${secs.join('')}</div><div class="doc-foot">Documento generado por el Sistema de Control de Supervisión de Seguridad PK SpA. Constituye un borrador sujeto a revisión, notificación y formalización por la Contraloría Interna y RRHH, conforme al debido proceso y al marco legal vigente.</div>`;
+  document.getElementById('cartaDoc').innerHTML=html;
+}
+async function generarPDFCarta(){
+  if(![...document.querySelectorAll('.cf-chk')].some(x=>x.checked)){toast('Selecciona al menos una falta',true);return;}
+  const btn=document.getElementById('cartaPdf');btn.classList.add('pdf-busy');btn.textContent='Generando…';
+  await pdfFromDoc(document.getElementById('cartaDoc'),'carta_amonestacion_pk');
+  btn.classList.remove('pdf-busy');btn.textContent='⬇ Descargar PDF';
+}
+document.getElementById('cartaGen').addEventListener('click',renderCarta);
+document.getElementById('cartaTipo').addEventListener('change',renderCarta);
+document.getElementById('cartaFaltas').addEventListener('change',renderCarta);
+document.getElementById('cartaPdf').addEventListener('click',generarPDFCarta);
+document.getElementById('cartaClose').addEventListener('click',()=>cartaModalBg.classList.remove('show'));
+document.getElementById('cartaX').addEventListener('click',()=>cartaModalBg.classList.remove('show'));
 /* ================= REPORTES (documento maquetado) ================= */
 const reportModalBg=document.getElementById('reportModalBg');
 let currentReport={meta:{titulo:'Reporte',lineas:[]},blocks:[]};
@@ -1109,6 +1199,10 @@ function renderText(model){
 async function generarPDF(){
   const el=document.getElementById('reportDoc'),btn=document.getElementById('reportPdf');
   btn.classList.add('pdf-busy');btn.textContent='Generando…';
+  await pdfFromDoc(el,'informe_pk');
+  btn.classList.remove('pdf-busy');btn.textContent='⬇ Descargar PDF';
+}
+async function pdfFromDoc(el,fileprefix){
   try{
     const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'pt',format:'a4'});
     const PW=pdf.internal.pageSize.getWidth(),PH=pdf.internal.pageSize.getHeight();
@@ -1170,9 +1264,8 @@ async function generarPDF(){
     // numeración de páginas
     const total=pdf.internal.getNumberOfPages();
     for(let p=1;p<=total;p++){pdf.setPage(p);pdf.setFontSize(8);pdf.setTextColor(150,150,150);pdf.text(`Seguridad PK SpA · página ${p} de ${total}`,PW/2,PH-12,{align:'center'});}
-    pdf.save('informe_pk_'+Date.now()+'.pdf');toast('PDF descargado');
+    pdf.save(fileprefix+'_'+Date.now()+'.pdf');toast('PDF descargado');
   }catch(e){console.error(e);toast('No se pudo generar el PDF',true);}
-  btn.classList.remove('pdf-busy');btn.textContent='⬇ Descargar PDF';
 }
 /* ---- Bloques reutilizables ---- */
 function coberturaBlock(sinCob){return {type:'cobertura',h:'Cobertura por instalación',items:sinCob.map(i=>({nombre:i.nombre,cliente:i.cliente}))};}
