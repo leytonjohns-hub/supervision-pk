@@ -286,6 +286,10 @@
   .flag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:20px;margin-left:6px}
   .flag.rev{background:#fdecea;color:var(--urgent-dark)}.flag.nov{background:#fbf0dc;color:#8a5a12}
   .rep td.nc{color:var(--urgent-dark);font-weight:700}
+  #ctlModeBar{background:var(--pk-teal,#1A7A8A);position:sticky;top:0;z-index:20}
+  .mode-inner{max-width:1080px;margin:0 auto;padding:8px 16px;display:flex;gap:8px}
+  .mode-btn{flex:1;font-family:'Saira',sans-serif;font-weight:600;font-size:13px;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,.4);background:transparent;color:rgba(255,255,255,.85);cursor:pointer;transition:all .15s}
+  .mode-btn.act{background:#fff;color:var(--pk-teal,#1A7A8A);border-color:#fff}
   .badge-cell{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700}
   .b-sin{background:#e6efe3;color:var(--pk-green-dark)}.b-con{background:var(--amber);color:#fff}.b-rej{background:var(--urgent);color:#fff}
   .alert-box{background:#fdf1f0;border:1px solid #e7b6b2;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--urgent-dark);margin-top:10px}
@@ -316,6 +320,11 @@
     <div class="user-chip" id="userChip" style="display:none"><div class="who"><b id="ucName">—</b><span id="ucRole">—</span></div><button class="logout" id="pwBtn" style="background:rgba(168,193,154,.22)">Mi clave</button><button class="logout" id="logoutBtn">Salir</button></div>
   </div>
 </header>
+
+<div id="ctlModeBar" style="display:none"><div class="mode-inner">
+  <button type="button" id="modeCtl" class="mode-btn act">🛡 Control de supervisión</button>
+  <button type="button" id="modeRonda" class="mode-btn">📋 Registrar ronda</button>
+</div></div>
 
 <div class="login-bg" id="loginScreen">
   <div class="login-card">
@@ -585,6 +594,7 @@ async function cargarInstalaciones(){
 function routeRol(rol){
   ['viewSupervisor','viewAdmin','viewGerencia','viewControl'].forEach(v=>{const e=document.getElementById(v);if(e)e.style.display='none';});
   document.getElementById('fab').classList.remove('show');
+  document.getElementById('ctlModeBar').style.display='none';
   const sub=document.getElementById('hSub');
   if(rol==='supervisor'){
     document.getElementById('viewSupervisor').style.display='';document.getElementById('fab').classList.add('show');
@@ -600,10 +610,31 @@ function routeRol(rol){
     document.getElementById('viewGerencia').style.display='';sub.textContent='Seguridad PK · Tablero de control';
     initDashboard();
   }else if(rol==='control'){
-    document.getElementById('viewControl').style.display='';sub.textContent='Seguridad PK · Control de Supervisión';
-    initControl();
+    document.getElementById('ctlModeBar').style.display='';
+    setModoControl();
   }
 }
+/* ===== Control Central: alterna entre control de supervisión y registro de ronda ===== */
+function setModoControl(){
+  document.getElementById('viewSupervisor').style.display='none';
+  document.getElementById('viewControl').style.display='';
+  document.getElementById('fab').classList.remove('show');
+  document.getElementById('modeCtl').classList.add('act');document.getElementById('modeRonda').classList.remove('act');
+  document.getElementById('hSub').textContent='Seguridad PK · Control de Supervisión';
+  initControl();
+}
+function setModoRonda(){
+  document.getElementById('viewControl').style.display='none';
+  document.getElementById('viewSupervisor').style.display='';
+  document.getElementById('fab').classList.add('show');
+  document.getElementById('modeRonda').classList.add('act');document.getElementById('modeCtl').classList.remove('act');
+  document.getElementById('hSub').textContent='Seguridad PK · Registro de ronda';
+  document.getElementById('fSup').value=sesion.nombre;document.getElementById('fSup').readOnly=true;
+  poblarInstSelect();
+  setTimeout(()=>{try{capMap.invalidateSize();}catch(_){}},160);
+}
+document.getElementById('modeCtl').addEventListener('click',setModoControl);
+document.getElementById('modeRonda').addEventListener('click',setModoRonda);
 function logout(){TOKEN=null;sesion=null;document.getElementById('userChip').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('liUser').value='';document.getElementById('liPass').value='';document.getElementById('liErr').textContent='';}
 document.getElementById('liBtn').addEventListener('click',login);
 document.getElementById('liPass').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
