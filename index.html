@@ -342,6 +342,7 @@
 <div id="ctlModeBar" style="display:none"><div class="mode-inner">
   <button type="button" id="modeCtl" class="mode-btn act">🛡 Control de supervisión</button>
   <button type="button" id="modeRonda" class="mode-btn">📋 Registrar ronda</button>
+  <button type="button" id="modeStats" class="mode-btn">📊 Estadísticas</button>
 </div></div>
 
 <div class="login-bg" id="loginScreen">
@@ -460,6 +461,7 @@
       <button class="apply" id="fApply">Aplicar</button>
       <button class="ghost" id="fReset">Limpiar</button>
       <button class="ghost" id="fReport">📄 Reporte</button>
+      <button class="ghost" id="fStats">📊 Control de supervisores</button>
     </div>
     <div class="kpis" id="kpis"></div>
     <div class="charts">
@@ -500,6 +502,38 @@
       <div id="pautaWrap"></div>
       <div class="field" style="margin-top:14px"><label>Observaciones generales del control</label><textarea id="cObs" placeholder="Síntesis, contexto y hallazgos relevantes del control…"></textarea></div>
       <button class="submit-btn" id="cSubmit" style="margin-top:14px">Registrar control</button>
+    </div>
+  </main>
+</div>
+
+<!-- =================== ESTADÍSTICAS POR SUPERVISOR =================== -->
+<div id="viewStats" style="display:none">
+  <main>
+    <div class="cap-card">
+      <div class="cap-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+        <div><h2>Estadísticas de control por supervisor</h2><p class="cap-sub">Histórico acumulado de controles de supervisión</p></div>
+        <button class="ghost" id="statBack" style="display:none;flex:0 0 auto">← Volver al tablero</button>
+      </div>
+      <div class="form-grid2" style="margin-top:10px">
+        <div class="field"><label>Desde</label><input type="date" id="statDesde"></div>
+        <div class="field"><label>Hasta</label><input type="date" id="statHasta"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px"><button class="ghost" id="statAplicar">Aplicar período</button><button class="ghost" id="statLimpiar">Todo el historial</button><button class="ghost" id="statRefresh">↻ Actualizar</button></div>
+    </div>
+
+    <div class="cap-card" style="margin-top:16px">
+      <div id="statResumen" class="counters" style="margin-bottom:6px"></div>
+      <h3 style="font-size:14px;color:var(--pk-green-dark);margin:14px 0 8px">Faltas graves y gravísimas por supervisor</h3>
+      <div style="position:relative;height:220px"><canvas id="chStatCmp"></canvas></div>
+    </div>
+
+    <div class="cap-card" style="margin-top:16px">
+      <div class="cap-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <h2 style="font-size:17px">Ficha del supervisor</h2>
+        <select id="statSelSup" style="flex:0 0 auto;max-width:280px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;background:#fff"></select>
+      </div>
+      <div id="statFicha"></div>
+      <button class="submit-btn" id="statInforme" style="margin-top:16px">📄 Generar informe histórico</button>
     </div>
   </main>
 </div>
@@ -631,7 +665,7 @@ async function cargarInstalaciones(){
   try{const res=await pkApi('instalaciones',{token:TOKEN});if(res.ok){instalaciones.length=0;res.instalaciones.forEach(i=>instalaciones.push({id:i.id,nombre:i.nombre,cliente:i.cliente,codigo:i.codigo,direccion:i.direccion,lat:Number(i.lat),lng:Number(i.lng),radio:Number(i.radio),activa:i.activa===true||String(i.activa).toUpperCase()==='TRUE'}));}}catch(e){console.error(e);}
 }
 function routeRol(rol){
-  ['viewSupervisor','viewAdmin','viewGerencia','viewControl'].forEach(v=>{const e=document.getElementById(v);if(e)e.style.display='none';});
+  ['viewSupervisor','viewAdmin','viewGerencia','viewControl','viewStats'].forEach(v=>{const e=document.getElementById(v);if(e)e.style.display='none';});
   document.getElementById('fab').classList.remove('show');
   document.getElementById('ctlModeBar').style.display='none';
   const sub=document.getElementById('hSub');
@@ -656,24 +690,37 @@ function routeRol(rol){
 /* ===== Control Central: alterna entre control de supervisión y registro de ronda ===== */
 function setModoControl(){
   document.getElementById('viewSupervisor').style.display='none';
+  document.getElementById('viewStats').style.display='none';
   document.getElementById('viewControl').style.display='';
   document.getElementById('fab').classList.remove('show');
-  document.getElementById('modeCtl').classList.add('act');document.getElementById('modeRonda').classList.remove('act');
+  document.getElementById('modeCtl').classList.add('act');document.getElementById('modeRonda').classList.remove('act');document.getElementById('modeStats').classList.remove('act');
   document.getElementById('hSub').textContent='Seguridad PK · Control de Supervisión';
   initControl();
 }
 function setModoRonda(){
   document.getElementById('viewControl').style.display='none';
+  document.getElementById('viewStats').style.display='none';
   document.getElementById('viewSupervisor').style.display='';
   document.getElementById('fab').classList.add('show');
-  document.getElementById('modeRonda').classList.add('act');document.getElementById('modeCtl').classList.remove('act');
+  document.getElementById('modeRonda').classList.add('act');document.getElementById('modeCtl').classList.remove('act');document.getElementById('modeStats').classList.remove('act');
   document.getElementById('hSub').textContent='Seguridad PK · Registro de ronda';
   document.getElementById('fSup').value=sesion.nombre;document.getElementById('fSup').readOnly=true;
   poblarInstSelect();
   setTimeout(()=>{try{capMap.invalidateSize();}catch(_){}},160);
 }
+function setModoStats(){
+  document.getElementById('viewControl').style.display='none';
+  document.getElementById('viewSupervisor').style.display='none';
+  document.getElementById('viewStats').style.display='';
+  document.getElementById('fab').classList.remove('show');
+  document.getElementById('modeStats').classList.add('act');document.getElementById('modeCtl').classList.remove('act');document.getElementById('modeRonda').classList.remove('act');
+  document.getElementById('statBack').style.display='none';
+  document.getElementById('hSub').textContent='Seguridad PK · Estadísticas de control';
+  loadStats();
+}
 document.getElementById('modeCtl').addEventListener('click',setModoControl);
 document.getElementById('modeRonda').addEventListener('click',setModoRonda);
+document.getElementById('modeStats').addEventListener('click',setModoStats);
 function logout(){TOKEN=null;sesion=null;document.getElementById('userChip').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('liUser').value='';document.getElementById('liPass').value='';document.getElementById('liErr').textContent='';}
 document.getElementById('liBtn').addEventListener('click',login);
 document.getElementById('liPass').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
@@ -1162,6 +1209,134 @@ document.getElementById('cartaPdf').addEventListener('click',generarPDFCarta);
 document.getElementById('cartaMail').addEventListener('click',enviarCartaCorreo);
 document.getElementById('cartaClose').addEventListener('click',()=>cartaModalBg.classList.remove('show'));
 document.getElementById('cartaX').addEventListener('click',()=>cartaModalBg.classList.remove('show'));
+
+/* ================= ESTADÍSTICAS POR SUPERVISOR (Etapa 3-C) ================= */
+let statControles=[], statAgg=[];
+async function loadStats(){
+  const cont=document.getElementById('statFicha');
+  cont.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:16px">Cargando histórico…</p>';
+  let res;try{res=await pkApi('controles',{token:TOKEN});}catch(e){cont.innerHTML='<p style="color:var(--urgent);text-align:center;padding:16px">Sin conexión con el servidor.</p>';return;}
+  if(!res||!res.ok){cont.innerHTML='<p style="color:var(--urgent);text-align:center;padding:16px">No se pudieron cargar los controles.</p>';return;}
+  statControles=res.controles||[];
+  renderStats();
+}
+function statFiltrados(){
+  const desde=document.getElementById('statDesde').value?new Date(document.getElementById('statDesde').value):null;
+  const hasta=document.getElementById('statHasta').value?new Date(document.getElementById('statHasta').value+'T23:59:59'):null;
+  return statControles.filter(c=>{const f=new Date(c.fecha);if(desde&&f<desde)return false;if(hasta&&f>hasta)return false;return true;});
+}
+function agregarStats(ctrls){
+  const map={};
+  ctrls.forEach(c=>{
+    const key=(c.supervisor||'—').trim();
+    if(!map[key])map[key]={supervisor:key,rut:c.rut||'',inst:{},controles:[],leves:0,graves:0,gravisimas:0,aspectos:{}};
+    const s=map[key];if(c.rut&&!s.rut)s.rut=c.rut;if(c.instalacion)s.inst[c.instalacion]=1;
+    let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){}
+    const nc=items.filter(i=>i.resultado==='NC');
+    let l=0,g=0,x=0;
+    nc.forEach(i=>{const gr=gOf(i);if(gr==='L'){l++;s.leves++;}else if(gr==='G'){g++;s.graves++;}else if(gr==='X'){x++;s.gravisimas++;}
+      const a=s.aspectos[i.n]||{n:i.n,texto:i.texto,g:gr,count:0};a.count++;a.g=gr;a.texto=i.texto;s.aspectos[i.n]=a;});
+    s.controles.push({folio:c.folio,fecha:c.fecha,instalacion:c.instalacion,tipo:c.tipo,controlador:c.controlador,leves:l,graves:g,gravisimas:x,total:nc.length,items:items});
+  });
+  const arr=Object.values(map);
+  arr.forEach(s=>{s.controles.sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));s.instalaciones=Object.keys(s.inst);s.gravesTotal=s.graves+s.gravisimas;});
+  arr.sort((a,b)=>b.gravesTotal-a.gravesTotal||b.leves-a.leves);
+  return arr;
+}
+function renderStats(){
+  const f=statFiltrados();
+  statAgg=agregarStats(f);
+  const tot={c:f.length,l:0,g:0,x:0};statAgg.forEach(s=>{tot.l+=s.leves;tot.g+=s.graves;tot.x+=s.gravisimas;});
+  document.getElementById('statResumen').innerHTML=`
+    <div class="counter"><div class="num">${f.length}</div><div class="lbl">Controles</div></div>
+    <div class="counter"><div class="num" style="color:#2E7D32">${tot.l}</div><div class="lbl">Faltas leves</div></div>
+    <div class="counter"><div class="num" style="color:#B8860B">${tot.g}</div><div class="lbl">Faltas graves</div></div>
+    <div class="counter"><div class="num" style="color:#B3261E">${tot.x}</div><div class="lbl">Gravísimas</div></div>`;
+  // gráfico comparativo (top 10 por faltas graves+)
+  const top=statAgg.filter(s=>s.gravesTotal>0).slice(0,10);
+  if(top.length)mkChart('chStatCmp','bar',top.map(s=>s.supervisor),top.map(s=>s.gravesTotal),'#B3261E');
+  else if(charts['chStatCmp']){charts['chStatCmp'].destroy();}
+  // selector de supervisor
+  const sel=document.getElementById('statSelSup');const prev=sel.value;
+  sel.innerHTML=statAgg.map(s=>`<option value="${esc(s.supervisor)}">${esc(s.supervisor)} (${s.gravesTotal} grave+)</option>`).join('');
+  if(prev&&statAgg.some(s=>s.supervisor===prev))sel.value=prev;
+  renderFicha();
+}
+function supActual(){const v=document.getElementById('statSelSup').value;return statAgg.find(s=>s.supervisor===v)||statAgg[0];}
+function renderFicha(){
+  const cont=document.getElementById('statFicha');
+  const s=supActual();
+  if(!s){cont.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:16px">Sin controles en el período.</p>';return;}
+  const rein=Object.values(s.aspectos).filter(a=>a.count>=2).sort((a,b)=>b.count-a.count||({X:0,G:1,L:2}[a.g]-{X:0,G:1,L:2}[b.g]));
+  const ini=s.supervisor.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  cont.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin:14px 0 12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:#fdecea;color:var(--urgent-dark);display:flex;align-items:center;justify-content:center;font-weight:700">${esc(ini)}</div>
+      <div style="flex:1"><div style="font-weight:700;font-size:15px">${esc(s.supervisor)}</div><div style="font-size:12.5px;color:var(--muted)">${s.rut?('RUT '+esc(s.rut)+' · '):''}${s.controles.length} control(es) · ${esc(s.instalaciones.join(', ')||'—')}</div></div>
+      ${s.gravesTotal>=3?'<span class="badge-cell b-rej">Reincidente</span>':''}
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <div style="flex:1;background:#eef1ea;border-radius:8px;padding:8px 10px"><div style="font-size:11px;color:#2E7D32">Leves</div><div style="font-size:18px;font-weight:700;color:#2E7D32">${s.leves}</div></div>
+      <div style="flex:1;background:#fbf0dc;border-radius:8px;padding:8px 10px"><div style="font-size:11px;color:#8a5a12">Graves</div><div style="font-size:18px;font-weight:700;color:#8a5a12">${s.graves}</div></div>
+      <div style="flex:1;background:#fdecea;border-radius:8px;padding:8px 10px"><div style="font-size:11px;color:var(--urgent-dark)">Gravísimas</div><div style="font-size:18px;font-weight:700;color:var(--urgent-dark)">${s.gravisimas}</div></div>
+    </div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:6px">Evolución de faltas por control (cronológico)</div>
+    <div style="position:relative;height:150px;margin-bottom:14px"><canvas id="chStatEvo"></canvas></div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Aspectos donde reincide (2 o más controles)</div>
+    ${rein.length?`<div style="display:flex;flex-direction:column;gap:6px">${rein.map(a=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#fafaf7;border-radius:8px;border-left:3px solid ${a.g==='X'?'#B3261E':a.g==='G'?'#B8860B':'#2E7D32'}">
+      <span class="pi-grav g-${a.g}">${GRAV_LBL[a.g]}</span><span style="font-size:13px;flex:1">${esc(a.texto)} <span style="color:var(--muted)">(ítem ${a.n})</span></span><span style="font-size:12px;color:var(--muted);font-weight:700">${a.count} veces</span></div>`).join('')}</div>`
+    :'<p style="font-size:13px;color:var(--muted);padding:4px 0">Sin reincidencias registradas en el período.</p>'}`;
+  const evo=s.controles.map((c,i)=>c.total);
+  mkChart('chStatEvo','line',s.controles.map((c,i)=>'C-'+(i+1)),evo,'rgba(216,90,48,.15)');
+}
+document.getElementById('statSelSup').addEventListener('change',renderFicha);
+document.getElementById('statAplicar').addEventListener('click',renderStats);
+document.getElementById('statLimpiar').addEventListener('click',()=>{document.getElementById('statDesde').value='';document.getElementById('statHasta').value='';renderStats();});
+document.getElementById('statRefresh').addEventListener('click',loadStats);
+document.getElementById('statInforme').addEventListener('click',()=>{const s=supActual();if(!s){toast('Selecciona un supervisor');return;}openReport(informeHistoricoModel(s));});
+document.getElementById('statBack').addEventListener('click',()=>{document.getElementById('viewStats').style.display='none';document.getElementById('viewGerencia').style.display='';});
+document.getElementById('fStats').addEventListener('click',()=>{
+  document.getElementById('viewGerencia').style.display='none';
+  document.getElementById('viewStats').style.display='';
+  document.getElementById('statBack').style.display='';
+  document.getElementById('hSub').textContent='Seguridad PK · Estadísticas de control';
+  loadStats();
+});
+
+/* ---- Informe histórico por supervisor (con fundamento legal Art. 160 CT) ---- */
+function informeHistoricoModel(s){
+  const fmtF=d=>d?new Date(d).toLocaleDateString('es-CL'):'—';
+  const desdeV=document.getElementById('statDesde').value,hastaV=document.getElementById('statHasta').value;
+  const periodo=(desdeV||hastaV)?`${desdeV?fmtF(desdeV):'inicio'} a ${hastaV?fmtF(hastaV):'hoy'}`:'todo el historial';
+  const blocks=[
+    {h:'Identificación',type:'resumen',text:`Supervisor(a): ${s.supervisor}${s.rut?(' · RUT '+s.rut):''}. Instalaciones: ${s.instalaciones.join(', ')||'—'}. Período del informe: ${periodo}. Controles considerados: ${s.controles.length}.`},
+    {h:'Consolidado de faltas por gravedad',type:'kpis',items:[
+      {v:s.gravisimas,k:'Gravísimas',cls:s.gravisimas?'red':''},
+      {v:s.graves,k:'Graves',cls:s.graves?'red':''},
+      {v:s.leves,k:'Leves',cls:s.leves?'amber':''},
+      {v:s.controles.length,k:'Controles'}
+    ]},
+  ];
+  // Detalle cronológico
+  const detRows=s.controles.map(c=>[{v:fmtF(c.fecha)},{v:c.instalacion||'—'},{v:c.controlador||'—'},{v:c.gravisimas,cls:c.gravisimas?'nc':''},{v:c.graves},{v:c.leves}]);
+  blocks.push({h:'Detalle cronológico de controles',type:'table',head:['Fecha','Instalación','Controlador','Gravís.','Graves','Leves'],leftCols:[0,1,2],rows:detRows});
+  // Faltas por control (hechos)
+  const hechos=[];
+  s.controles.forEach(c=>{const nc=c.items.filter(i=>i.resultado==='NC');nc.forEach(i=>{const g=gOf(i);hechos.push([{v:fmtF(c.fecha)},{v:i.texto,...(g==='X'?{flag:{cls:'rev',txt:'GRAVÍSIMA'}}:(g==='G'?{flag:{cls:'nov',txt:'GRAVE'}}:{}))},{v:GRAV_LBL[g]},{v:i.obs||'—'},{v:i.respaldo||'—'}]);});});
+  if(hechos.length)blocks.push({h:'Hechos constatados (incumplimientos por control)',type:'table',head:['Fecha','Aspecto incumplido','Gravedad','Observación','Respaldo'],leftCols:[1,3,4],rows:hechos});
+  // Reincidencias
+  const rein=Object.values(s.aspectos).filter(a=>a.count>=2).sort((a,b)=>b.count-a.count);
+  if(rein.length)blocks.push({h:'Reincidencias',type:'findings',items:rein.map(a=>({ok:false,text:`${a.texto} (ítem ${a.n}) — falta ${GRAV_LBL[a.g].toLowerCase()}, reiterada en ${a.count} controles.`}))});
+  // Fundamento legal
+  blocks.push({h:'Fundamento legal (antecedente)',type:'resumen',text:`El presente informe consolida el historial de controles de supervisión practicados al trabajador. La reiteración de incumplimientos —en particular las faltas graves y gravísimas y su repetición en el tiempo— puede configurar la causal de «incumplimiento grave de las obligaciones que impone el contrato» prevista en el artículo 160 N°7 del Código del Trabajo, así como otras causales del mismo artículo según la naturaleza de los hechos. Este documento constituye un ANTECEDENTE PROBATORIO consolidado puesto a disposición de la Contraloría Interna y de RRHH; no constituye una decisión de desvinculación. La procedencia de la causal, su ponderación y su formalización son resorte de la empresa con la asesoría legal correspondiente, respetando el debido proceso.`});
+  blocks.push({h:'Nota',type:'resumen',text:'Los porcentajes de cumplimiento operativo no se incluyen en este informe: la evaluación disciplinaria se funda en los hechos constatados, su gravedad conforme al RIOHS y su reiteración.'});
+  return {meta:{titulo:'Informe Histórico de Control por Supervisor',lineas:[
+    'Supervisor(a): '+s.supervisor+(s.rut?(' · RUT '+s.rut):''),
+    'Período: '+periodo+'  ·  Controles: '+s.controles.length,
+    'Consolidado: '+s.gravisimas+' gravísima(s), '+s.graves+' grave(s), '+s.leves+' leve(s)',
+    'Emitido: '+new Date().toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'})
+  ]},blocks};
+}
 /* ================= REPORTES (documento maquetado) ================= */
 const reportModalBg=document.getElementById('reportModalBg');
 let currentReport={meta:{titulo:'Reporte',lineas:[]},blocks:[]};
