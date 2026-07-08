@@ -149,6 +149,9 @@
   .pi-top{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px}
   .pi-n{font-family:'Saira',sans-serif;font-weight:700;font-size:12px;color:#fff;background:var(--pk-green);border-radius:6px;min-width:24px;height:22px;display:grid;place-items:center;flex:0 0 auto}
   .pi-peso{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 7px;border-radius:20px;flex:0 0 auto}
+  .pi-grav{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 8px;border-radius:20px;flex:0 0 auto}
+  .pi-grav.g-L{background:#eef1ea;color:#2E7D32}.pi-grav.g-G{background:#fbf0dc;color:#8a5a12}.pi-grav.g-X{background:#fdecea;color:var(--urgent-dark)}
+  .pi-evi{font-size:12px;color:#0f5f6b;background:#e8f4f6;border-radius:7px;padding:7px 10px;margin-bottom:8px;line-height:1.4}
   .pi-peso.p3{background:#fdecea;color:var(--urgent-dark)}.pi-peso.p2{background:#fbf0dc;color:#8a5a12}.pi-peso.p1{background:#eef1ea;color:var(--pk-green-dark)}
   .pi-q{font-size:13.5px;color:var(--ink);font-weight:600;line-height:1.35;flex:1}
   .pi-verif{font-size:11.5px;color:var(--muted);margin:0 0 9px 32px;line-height:1.35}
@@ -158,7 +161,8 @@
   .pi-opts button.sp{background:var(--amber);border-color:var(--amber);color:#fff}
   .pi-opts button.snc{background:var(--urgent);border-color:var(--urgent);color:#fff}
   .pi-opts button.sna{background:var(--muted);border-color:var(--muted);color:#fff}
-  .pi-obs{max-height:0;overflow:hidden;transition:max-height .25s ease}.pi-obs.open{max-height:140px;margin:9px 0 0 32px}
+  .pi-obs{max-height:0;overflow:hidden;transition:max-height .3s ease}.pi-obs.open{max-height:420px;margin:9px 0 0 32px}
+  .pi-obs textarea+textarea{margin-top:8px}
   .pi-obs textarea{width:100%;min-height:50px;border:1.5px solid #e7b6b2;border-radius:8px;padding:8px 10px;font-family:inherit;font-size:13px;resize:vertical;box-sizing:border-box}
   .voice-row{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
   .mic-btn{display:inline-flex;align-items:center;gap:9px;font-family:'Saira',sans-serif;font-weight:600;font-size:14px;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;background:#fff;color:var(--pk-green-dark);border:1.5px solid var(--pk-green);border-radius:30px;padding:11px 18px 11px 14px;min-height:46px}
@@ -475,7 +479,7 @@
       <div class="score-bar" id="scoreBar">
         <div class="score-item"><span class="sv" id="scPct">—</span><span class="sk">Cumplimiento</span></div>
         <div class="score-item"><span class="sv" id="scCal" style="font-size:16px">—</span><span class="sk">Calificación</span></div>
-        <div class="score-item"><span class="sv" id="scCrit" style="color:var(--urgent)">0</span><span class="sk">Hallazgos críticos</span></div>
+        <div class="score-item"><span class="sv" id="scCrit" style="color:var(--urgent)">0</span><span class="sk">Faltas graves +</span></div>
         <div class="score-item"><span class="sv" id="scResp">0/35</span><span class="sk">Aspectos evaluados</span></div>
       </div>
       <div class="chk-resumen" style="margin-top:6px">Marca cada aspecto: <b>C</b> Cumple · <b>P</b> Parcial · <b>NC</b> No cumple · <b>NA</b> No aplica. El peso (1–3) indica criticidad. Un peso 3 marcado NC es hallazgo crítico.</div>
@@ -837,54 +841,56 @@ function refreshJornada(){if(!jorInit)return;jorLayer.clearLayers();const pts=ro
 /* ================= CONTROL DE SUPERVISIÓN (pauta) ================= */
 const PAUTA=[
  {d:'D1. Presencia y disciplina del servicio (supervisor)',items:[
-   {n:1,peso:3,t:'Supervisor presente en la instalación en el horario comprometido y ubicable/operativo',v:'Observación directa · registro de ingreso · contraste con programación de turnos'},
-   {n:2,peso:1,t:'Uniforme institucional completo y presentación personal acorde al cargo',v:'Observación directa · registro fotográfico'},
-   {n:3,peso:2,t:'Porta credencial OS-10 vigente, radio operativa y libreta de novedades',v:'Observación directa · verificación de vigencia de la credencial OS-10'}]},
+   {n:1,peso:3,g:'G',t:'Supervisor presente en la instalación en el horario comprometido y ubicable/operativo',v:'Observación directa · registro de ingreso · contraste con programación de turnos',ev:'Registro de ingreso/salida contrastado con la programación; geolocalización o foto de la visita.'},
+   {n:2,peso:1,g:'L',t:'Uniforme institucional completo y presentación personal acorde al cargo',v:'Observación directa · registro fotográfico',ev:'Foto del supervisor con uniforme completo y credencial visible.'},
+   {n:3,peso:2,g:'G',t:'Porta credencial OS-10 vigente, radio operativa y libreta de novedades',v:'Observación directa · verificación de vigencia de la credencial OS-10',ev:'Foto o copia de la credencial OS-10 con fecha de vencimiento visible.'}]},
  {d:'D2. Supervisión y control del personal de turno',items:[
-   {n:4,peso:3,t:'Dotación del turno completa, sin puestos descubiertos',v:'Contraste planilla de turnos vs. presencia real en cada puesto'},
-   {n:5,peso:2,t:'Asistencia y puntualidad del personal registradas y controladas',v:'Registro de asistencia / relevo · observación directa'},
-   {n:6,peso:2,t:'Personal distribuido en puestos y rondas conforme a la pauta del servicio',v:'Pauta del servicio vs. ubicación real del personal'},
-   {n:7,peso:2,t:'Guardias con uniforme, EPP y presentación conforme (incl. chaleco anticorte donde aplica)',v:'Observación directa · EPP asignado según IPER'}]},
+   {n:4,peso:3,g:'G',t:'Dotación del turno completa, sin puestos descubiertos',v:'Contraste planilla de turnos vs. presencia real en cada puesto',ev:'Contraste planilla de turnos vs. asistencia real; foto del puesto con hora.'},
+   {n:5,peso:2,g:'L',t:'Asistencia y puntualidad del personal registradas y controladas',v:'Registro de asistencia / relevo · observación directa',ev:'Registro de asistencia/relevo o captura del control horario.'},
+   {n:6,peso:2,g:'L',t:'Personal distribuido en puestos y rondas conforme a la pauta del servicio',v:'Pauta del servicio vs. ubicación real del personal',ev:'Pauta del servicio vs. ubicación real; foto de los puestos.'},
+   {n:7,peso:2,g:'L',t:'Guardias con uniforme, EPP y presentación conforme (incl. chaleco anticorte donde aplica)',v:'Observación directa · EPP asignado según IPER',ev:'Foto del personal con uniforme y EPP; constancia de entrega de EPP.'}]},
  {d:'D3. Control de acceso',items:[
-   {n:8,peso:2,t:'Registro de control de acceso peatonal completo y al día',v:'Revisión del registro / bitácora de acceso'},
-   {n:9,peso:2,t:'Control de acceso vehicular con registro (patente, conductor, motivo)',v:'Revisión del registro vehicular'},
-   {n:10,peso:2,t:'Aplicación efectiva de las consignas de acceso del mandante',v:'Observación del procedimiento · consignas vigentes del puesto'}]},
+   {n:8,peso:2,g:'L',t:'Registro de control de acceso peatonal completo y al día',v:'Revisión del registro / bitácora de acceso',ev:'Foto o copia del registro de acceso peatonal del día.'},
+   {n:9,peso:2,g:'L',t:'Control de acceso vehicular con registro (patente, conductor, motivo)',v:'Revisión del registro vehicular',ev:'Foto o copia del registro vehicular (patente, conductor, motivo).'},
+   {n:10,peso:2,g:'L',t:'Aplicación efectiva de las consignas de acceso del mandante',v:'Observación del procedimiento · consignas vigentes del puesto',ev:'Consignas vigentes; acta de constatación de su aplicación.'}]},
  {d:'D4. Rondas y vigilancia operativa',items:[
-   {n:11,peso:3,t:'Rondas realizadas según frecuencia y ruta programadas, con puntos críticos cubiertos',v:'Registro de rondas (bitácora / RFID / NFC / QR) · observación'},
-   {n:12,peso:2,t:'Registro de rondas trazable y verificable (hora, punto, responsable)',v:'Revisión del registro físico o digital de rondas'}]},
+   {n:11,peso:3,g:'G',t:'Rondas realizadas según frecuencia y ruta programadas, con puntos críticos cubiertos',v:'Registro de rondas (bitácora / RFID / NFC / QR) · observación',ev:'Registro de rondas (bitácora/RFID/NFC/QR); foto de puntos críticos.'},
+   {n:12,peso:2,g:'L',t:'Registro de rondas trazable y verificable (hora, punto, responsable)',v:'Revisión del registro físico o digital de rondas',ev:'Captura o copia del registro de rondas.'}]},
  {d:'D5. Monitoreo, equipos y tecnología',items:[
-   {n:13,peso:3,t:'CCTV operativo, con grabación activa y sin cámaras fuera de servicio no reportadas',v:'Revisión en monitor / NVR · contraste con reporte de fallas'},
-   {n:14,peso:2,t:'Sistemas de alarma y control de acceso operativos',v:'Verificación / prueba visual · registro de estado'},
-   {n:15,peso:2,t:'Comunicaciones operativas (radios cargadas y en canal, teléfono de respaldo)',v:'Prueba de radio · observación directa'},
-   {n:16,peso:2,t:'Fallas técnicas detectadas, registradas y reportadas oportunamente',v:'Libro de novedades · reporte a jefatura / mandante'}]},
+   {n:13,peso:3,g:'G',t:'CCTV operativo, con grabación activa y sin cámaras fuera de servicio no reportadas',v:'Revisión en monitor / NVR · contraste con reporte de fallas',ev:'Foto del monitor mostrando cámaras activas o la caída; ticket de falla.'},
+   {n:14,peso:2,g:'G',t:'Sistemas de alarma y control de acceso operativos',v:'Verificación / prueba visual · registro de estado',ev:'Acta de prueba/constatación; foto del panel o registro de estado.'},
+   {n:15,peso:2,g:'L',t:'Comunicaciones operativas (radios cargadas y en canal, teléfono de respaldo)',v:'Prueba de radio · observación directa',ev:'Acta de prueba de radio; foto del equipo.'},
+   {n:16,peso:2,g:'G',t:'Fallas técnicas detectadas, registradas y reportadas oportunamente',v:'Libro de novedades · reporte a jefatura / mandante',ev:'Libro de novedades y/o correo de reporte a jefatura o mandante.'}]},
  {d:'D6. Registros y documentación operativa',items:[
-   {n:17,peso:3,t:'Libro de novedades conforme a reglas (tinta indeleble, sin borrones ni hojas arrancadas, fecha/hora/firma por anotación)',v:'Revisión directa del libro de novedades'},
-   {n:18,peso:2,t:'Novedades relevantes del turno efectivamente registradas (relevo, ingresos no rutinarios, incidentes)',v:'Libro de novedades vs. observación / consulta'},
-   {n:19,peso:2,t:'Relevo de turno documentado (entrega y recepción de puesto y novedades)',v:'Registro de relevo de turno'},
-   {n:20,peso:2,t:'Informes de incidente elaborados cuando corresponde, con estructura mínima (5W)',v:'Revisión de los informes del período'}]},
+   {n:17,peso:3,g:'G',t:'Libro de novedades conforme a reglas (tinta indeleble, sin borrones ni hojas arrancadas, fecha/hora/firma por anotación)',v:'Revisión directa del libro de novedades',ev:'Fotografía de las páginas del libro que evidencie su integridad.'},
+   {n:18,peso:2,g:'G',t:'Novedades relevantes del turno efectivamente registradas (relevo, ingresos no rutinarios, incidentes)',v:'Libro de novedades vs. observación / consulta',ev:'Fotografía del libro de novedades contrastada con lo constatado.'},
+   {n:19,peso:2,g:'L',t:'Relevo de turno documentado (entrega y recepción de puesto y novedades)',v:'Registro de relevo de turno',ev:'Foto o copia del registro de relevo (entrega y recepción).'},
+   {n:20,peso:2,g:'G',t:'Informes de incidente elaborados cuando corresponde, con estructura mínima (5W)',v:'Revisión de los informes del período',ev:'Copia del informe de incidente (estructura 5W).'}]},
  {d:'D7. Respuesta a emergencias y contingencias',items:[
-   {n:21,peso:3,t:'El supervisor conoce y explica los protocolos de emergencia (incendio, médica, sismo, robo/asalto, paquete sospechoso)',v:'Entrevista al supervisor · preguntas de verificación'},
-   {n:22,peso:2,t:'Números de emergencia y plan de evacuación disponibles y conocidos (133/132/131; vías y zona segura)',v:'Observación de plan/señalética · entrevista'},
-   {n:23,peso:2,t:'Medios de emergencia operativos y vigentes (extintores con carga/fecha, botiquín, señalética, luces)',v:'Inspección física de los medios'}]},
+   {n:21,peso:3,g:'G',t:'El supervisor conoce y explica los protocolos de emergencia (incendio, médica, sismo, robo/asalto, paquete sospechoso)',v:'Entrevista al supervisor · preguntas de verificación',ev:'Acta de entrevista/verificación con preguntas de control.'},
+   {n:22,peso:2,g:'L',t:'Números de emergencia y plan de evacuación disponibles y conocidos (133/132/131; vías y zona segura)',v:'Observación de plan/señalética · entrevista',ev:'Foto de la señalética/plan y del listado de números; constatación.'},
+   {n:23,peso:2,g:'G',t:'Medios de emergencia operativos y vigentes (extintores con carga/fecha, botiquín, señalética, luces)',v:'Inspección física de los medios',ev:'Foto de extintores (etiqueta con fecha), botiquín y señalética.'}]},
  {d:'D8. Capacitación y desarrollo del personal',items:[
-   {n:24,peso:2,t:'Inducción al personal nuevo realizada y registrada (consignas y procedimientos del puesto)',v:'Registro de inducción · entrevista a guardia nuevo'},
-   {n:25,peso:1,t:'Refuerzo periódico de procedimientos / charlas / simulacros, con registro',v:'Registro de capacitación o charlas operativas'}]},
+   {n:24,peso:2,g:'L',t:'Inducción al personal nuevo realizada y registrada (consignas y procedimientos del puesto)',v:'Registro de inducción · entrevista a guardia nuevo',ev:'Registro de inducción firmado; acta de entrevista al guardia nuevo.'},
+   {n:25,peso:1,g:'L',t:'Refuerzo periódico de procedimientos / charlas / simulacros, con registro',v:'Registro de capacitación o charlas operativas',ev:'Registro de capacitación o charlas operativas, firmado.'}]},
  {d:'D9. Relación con el mandante y consignas del cliente',items:[
-   {n:26,peso:2,t:'Comunicación regular y formal con la contraparte del mandante',v:'Registro de coordinación · entrevista a la contraparte cuando sea posible'},
-   {n:27,peso:2,t:'Requerimientos del mandante atendidos y trazables',v:'Registro de requerimientos y respuestas'},
-   {n:28,peso:2,t:'Consignas específicas del puesto/instalación vigentes, disponibles y conocidas por el personal',v:'Revisión de consignas · entrevista a guardias'}]},
+   {n:26,peso:2,g:'L',t:'Comunicación regular y formal con la contraparte del mandante',v:'Registro de coordinación · entrevista a la contraparte cuando sea posible',ev:'Registro de coordinación (correos/actas) con la contraparte.'},
+   {n:27,peso:2,g:'L',t:'Requerimientos del mandante atendidos y trazables',v:'Registro de requerimientos y respuestas',ev:'Registro de requerimientos del mandante y sus respuestas.'},
+   {n:28,peso:2,g:'L',t:'Consignas específicas del puesto/instalación vigentes, disponibles y conocidas por el personal',v:'Revisión de consignas · entrevista a guardias',ev:'Copia de consignas vigentes; acta de verificación con el personal.'}]},
  {d:'D10. Gestión administrativo-laboral y cumplimiento documental',items:[
-   {n:29,peso:3,t:'Documentación legal-laboral del personal al día (liquidaciones firmadas, cotizaciones Previred, F30-1, comprobantes)',v:'Revisión documental · contraste con RRHH'},
-   {n:30,peso:2,t:'Constancias de entrega de EPP y de capacitación al día',v:'Revisión de constancias firmadas'},
-   {n:31,peso:2,t:'Licencias médicas gestionadas y reemplazos sin discontinuidad del servicio',v:'Registro de licencias y reemplazos vs. cobertura real'},
-   {n:32,peso:2,t:'Régimen de jornada y descansos respetado (4×4 / descansos entre turnos)',v:'Planilla de turnos vs. asistencia efectiva'}]},
+   {n:29,peso:3,g:'G',t:'Documentación legal-laboral del personal al día (liquidaciones firmadas, cotizaciones Previred, F30-1, comprobantes)',v:'Revisión documental · contraste con RRHH',ev:'Copia/captura de liquidaciones, Previred y F30-1.'},
+   {n:30,peso:2,g:'L',t:'Constancias de entrega de EPP y de capacitación al día',v:'Revisión de constancias firmadas',ev:'Constancias firmadas de entrega de EPP y de capacitación.'},
+   {n:31,peso:2,g:'G',t:'Licencias médicas gestionadas y reemplazos sin discontinuidad del servicio',v:'Registro de licencias y reemplazos vs. cobertura real',ev:'Registro de licencias y de reemplazos vs. cobertura real.'},
+   {n:32,peso:2,g:'G',t:'Régimen de jornada y descansos respetado (4×4 / descansos entre turnos)',v:'Planilla de turnos vs. asistencia efectiva',ev:'Planilla de turnos vs. asistencia efectiva.'}]},
  {d:'D11. Reporte a la jefatura, liderazgo y conducta',items:[
-   {n:33,peso:2,t:'Informa oportunamente a la jefatura novedades, incumplimientos y requerimientos; respeta la cadena de mando',v:'Registros de reporte · entrevista a jefatura'},
-   {n:34,peso:2,t:'Manejo del personal y resolución de conflictos adecuados; clima de trabajo respetuoso',v:'Observación directa · entrevistas a guardias'},
-   {n:35,peso:3,t:'Trato conforme a DD.HH. y uso proporcional de la fuerza; protocolos diferenciados con grupos de especial protección',v:'Entrevista · revisión de eventuales eventos o denuncias'}]}
+   {n:33,peso:2,g:'L',t:'Informa oportunamente a la jefatura novedades, incumplimientos y requerimientos; respeta la cadena de mando',v:'Registros de reporte · entrevista a jefatura',ev:'Registros de reporte a la jefatura (correos/actas).'},
+   {n:34,peso:2,g:'L',t:'Manejo del personal y resolución de conflictos adecuados; clima de trabajo respetuoso',v:'Observación directa · entrevistas a guardias',ev:'Acta de observación directa y/o entrevistas a los guardias.'},
+   {n:35,peso:3,g:'X',t:'Trato conforme a DD.HH. y uso proporcional de la fuerza; protocolos diferenciados con grupos de especial protección',v:'Entrevista · revisión de eventuales eventos o denuncias',ev:'Acta de entrevista; revisión de denuncias, cámaras o registros del evento.'}]}
 ];
+const GRAV_LBL={L:'Leve',G:'Grave',X:'Gravísima'};
+const SANC_BASE={L:'Amonestación verbal o escrita (Art. 65 bis / 112 RIOHS).',G:'Amonestación escrita y/o multa de hasta 25% de la remuneración diaria (Art. 65 bis / 113 RIOHS).',X:'Amonestación escrita, multa y/o término de contrato conforme al Art. 160 del Código del Trabajo.'};
 const PAUTA_TOTAL=PAUTA.reduce((a,d)=>a+d.items.length,0);
-let ctlState={},ctlObs={},controlInit=false;
+let ctlState={},ctlObs={},ctlResp={},controlInit=false;
 function initControl(){
   document.getElementById('cControlador').value=sesion.nombre;
   document.getElementById('cFecha').value=new Date().toLocaleDateString('es-CL');
@@ -892,43 +898,50 @@ function initControl(){
   loadControles();
   refrescarClientes();
 }
+function itDe(n){for(const d of PAUTA)for(const it of d.items)if(it.n===n)return it;return null;}
 function renderPauta(){
   const w=document.getElementById('pautaWrap');
   w.innerHTML=PAUTA.map(dim=>`<div class="dim-block"><div class="dim-title"><span>${esc(dim.d)}</span><span class="dpct" id="dpct_${dim.d.slice(0,3)}"></span></div>${dim.items.map(it=>`
-    <div class="pauta-item" id="pi_${it.n}"><div class="pi-top"><span class="pi-n">${it.n}</span><span class="pi-peso p${it.peso}">Peso ${it.peso}</span><span class="pi-q">${esc(it.t)}</span></div>
+    <div class="pauta-item" id="pi_${it.n}"><div class="pi-top"><span class="pi-n">${it.n}</span><span class="pi-grav g-${it.g}">${GRAV_LBL[it.g]}</span><span class="pi-q">${esc(it.t)}</span></div>
     <div class="pi-verif">Verificación: ${esc(it.v)}</div>
     <div class="pi-opts"><button type="button" data-n="${it.n}" data-v="C">C</button><button type="button" data-n="${it.n}" data-v="P">P</button><button type="button" data-n="${it.n}" data-v="NC">NC</button><button type="button" data-n="${it.n}" data-v="NA">NA</button></div>
-    <div class="pi-obs" id="piobs_${it.n}"><textarea data-obs="${it.n}" placeholder="Observación / hallazgo…"></textarea></div></div>`).join('')}</div>`).join('');
+    <div class="pi-obs" id="piobs_${it.n}">
+      <div class="pi-evi">📎 Evidencia esperada: ${esc(it.ev)}</div>
+      <textarea data-obs="${it.n}" placeholder="Observación / hallazgo (obligatorio)…"></textarea>
+      <textarea data-resp="${it.n}" placeholder="Respaldo registrado: describe la evidencia obtenida y su ubicación (foto, documento, acta, N° de folio en carpeta…)"></textarea>
+    </div></div>`).join('')}</div>`).join('');
   w.querySelectorAll('.pi-opts button').forEach(b=>b.addEventListener('click',()=>setPauta(+b.dataset.n,b.dataset.v)));
   w.querySelectorAll('textarea[data-obs]').forEach(t=>t.addEventListener('input',e=>{ctlObs[+e.target.dataset.obs]=e.target.value;}));
+  w.querySelectorAll('textarea[data-resp]').forEach(t=>t.addEventListener('input',e=>{ctlResp[+e.target.dataset.resp]=e.target.value;}));
   actualizarScore();
 }
-function pesoDe(n){for(const d of PAUTA)for(const it of d.items)if(it.n===n)return it.peso;return 0;}
+function pesoDe(n){const it=itDe(n);return it?it.peso:0;}
+function gravDe(n){const it=itDe(n);return it?it.g:'L';}
 function setPauta(n,v){
   ctlState[n]=v;
   const item=document.getElementById('pi_'+n);
   item.querySelectorAll('.pi-opts button').forEach(b=>{b.classList.remove('sc','sp','snc','sna');if(b.dataset.v===v)b.classList.add(v==='C'?'sc':v==='P'?'sp':v==='NC'?'snc':'sna');});
   const esNC=v==='NC';item.classList.toggle('nc',esNC);
-  item.classList.toggle('crit',esNC&&pesoDe(n)===3);
+  item.classList.toggle('crit',esNC&&gravDe(n)==='X');
   document.getElementById('piobs_'+n).classList.toggle('open',esNC);
   actualizarScore();
 }
 function calcControl(){
-  let aplic=0,obt=0,crit=0,resp=0;const listaCrit=[];
-  PAUTA.forEach(d=>d.items.forEach(it=>{const r=ctlState[it.n];if(!r)return;resp++;if(r==='NA')return;aplic+=it.peso;if(r==='C')obt+=it.peso;else if(r==='P')obt+=it.peso*0.5;else if(r==='NC'&&it.peso===3){crit++;listaCrit.push(it);}}));
+  let aplic=0,obt=0,resp=0,leve=0,grave=0,grav=0;const listaCrit=[];
+  PAUTA.forEach(d=>d.items.forEach(it=>{const r=ctlState[it.n];if(!r)return;resp++;if(r==='NA')return;aplic+=it.peso;if(r==='C')obt+=it.peso;else if(r==='P')obt+=it.peso*0.5;else if(r==='NC'){if(it.g==='L')leve++;else if(it.g==='G')grave++;else if(it.g==='X'){grav++;listaCrit.push(it);}}}));
   const pct=aplic?Math.round(obt/aplic*100):0;
   const cal=pct>=90?'Óptimo':pct>=75?'Adecuado':pct>=60?'Con observaciones':'Deficiente / crítico';
-  return {pct,cal,crit,resp,listaCrit};
+  return {pct,cal,resp,leve,grave,grav,gravesTotal:grave+grav,listaCrit};
 }
 function actualizarScore(){
   const c=calcControl();
   document.getElementById('scPct').textContent=c.resp?c.pct+'%':'—';
   document.getElementById('scCal').textContent=c.resp?c.cal:'—';
-  document.getElementById('scCrit').textContent=c.crit;
+  document.getElementById('scCrit').textContent=c.gravesTotal;
   document.getElementById('scResp').textContent=c.resp+'/'+PAUTA_TOTAL;
   PAUTA.forEach(d=>{let a=0,o=0,ok=false;d.items.forEach(it=>{const r=ctlState[it.n];if(r&&r!=='NA'){ok=true;a+=it.peso;if(r==='C')o+=it.peso;else if(r==='P')o+=it.peso*0.5;}});const el=document.getElementById('dpct_'+d.d.slice(0,3));if(el)el.textContent=ok&&a?Math.round(o/a*100)+'%':'';});
 }
-function itemsPayload(){const out=[];PAUTA.forEach(d=>d.items.forEach(it=>out.push({n:it.n,dim:d.d.slice(0,3),texto:it.t,peso:it.peso,resultado:ctlState[it.n]||null,obs:(ctlState[it.n]==='NC'?(ctlObs[it.n]||'').trim():'')})));return out;}
+function itemsPayload(){const out=[];PAUTA.forEach(d=>d.items.forEach(it=>out.push({n:it.n,dim:d.d.slice(0,3),texto:it.t,peso:it.peso,g:it.g,resultado:ctlState[it.n]||null,obs:(ctlState[it.n]==='NC'?(ctlObs[it.n]||'').trim():''),respaldo:(ctlState[it.n]==='NC'?(ctlResp[it.n]||'').trim():'')})));return out;}
 async function registrarControl(){
   const sup=document.getElementById('cSup').value.trim(),inst=document.getElementById('cInst').value.trim(),btn=document.getElementById('cSubmit');
   if(!sup){toast('Indica el supervisor controlado',true);return;}
@@ -947,7 +960,7 @@ async function registrarControl(){
   toast(`Control registrado · ${res.folio} · ${res.pct}% (${res.calificacion})`);
   resetControl();loadControles();
 }
-function resetControl(){ctlState={};ctlObs={};['cSup','cRut','cInst','cObs'].forEach(id=>document.getElementById(id).value='');document.getElementById('cTipo').value='Programado';renderPauta();window.scrollTo({top:0,behavior:'smooth'});}
+function resetControl(){ctlState={};ctlObs={};ctlResp={};['cSup','cRut','cInst','cObs'].forEach(id=>document.getElementById(id).value='');document.getElementById('cTipo').value='Programado';renderPauta();window.scrollTo({top:0,behavior:'smooth'});}
 
 /* ----- Controles registrados + informe ----- */
 let controles=[];
@@ -962,64 +975,67 @@ function bandaCls(pct){return pct>=90?'b-sin':pct>=75?'b-sin':pct>=60?'b-con':'b
 function renderCtlList(){
   const cont=document.getElementById('ctlList');
   if(!controles.length){cont.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Aún no hay controles registrados.</p>';return;}
-  cont.innerHTML=controles.map((c,idx)=>{const pct=Number(c.pct)||0;const cr=Number(c.criticos)||0;const fecha=c.fecha?new Date(c.fecha).toLocaleDateString('es-CL'):'';
-    return `<div class="row-item"><div class="row-top"><span class="row-name">${esc(c.supervisor||'—')}</span><span class="badge-cell ${bandaCls(pct)}">${pct}% · ${esc(c.calificacion||'')}</span></div>
-    <div class="row-meta"><span>${esc(c.instalacion||'')}</span><span>${esc(c.tipo||'')} · ${esc(fecha)}</span>${cr>0?`<span style="color:var(--urgent);font-weight:700">⚠ ${cr} crítico(s)</span>`:''}</div>
+  cont.innerHTML=controles.map((c,idx)=>{let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){}
+    const nc=items.filter(i=>i.resultado==='NC');const g=nc.filter(i=>gOf(i)==='G').length,x=nc.filter(i=>gOf(i)==='X').length,l=nc.filter(i=>gOf(i)==='L').length;
+    const fecha=c.fecha?new Date(c.fecha).toLocaleDateString('es-CL'):'';
+    const badge=(g+x)>0?`<span class="badge-cell b-rej">${g+x} grave(s)+</span>`:(l>0?`<span class="badge-cell b-con">${l} leve(s)</span>`:`<span class="badge-cell b-sin">Sin faltas</span>`);
+    return `<div class="row-item"><div class="row-top"><span class="row-name">${esc(c.supervisor||'—')}</span>${badge}</div>
+    <div class="row-meta"><span>${esc(c.instalacion||'')}</span><span>${esc(c.tipo||'')} · ${esc(fecha)}</span>${x>0?`<span style="color:var(--urgent);font-weight:700">⚠ ${x} gravísima(s)</span>`:''}</div>
     <div class="row-btns"><span style="font-size:11px;color:var(--muted)">${esc(c.folio||'')}</span><button class="mini-btn" onclick="verInformeControl(${idx})">📄 Ver informe</button></div></div>`;}).join('');
 }
 document.getElementById('ctlRefresh').addEventListener('click',loadControles);
 
-function medidasSugeridas(pct,criticos){
-  if(criticos>0)return{clase:'red',txt:'Resultado con hallazgos críticos (aspectos de peso 3 en «No cumple»). Amerita intervención inmediata y evaluación de medida disciplinaria conforme al RIOHS, con registro en el plan de acción. La procedencia y el grado de la medida (amonestación verbal, escrita, multa o término) los define la Contraloría / RRHH según el historial del supervisor y el marco legal aplicable.'};
-  if(pct>=90)return{clase:'ok',txt:'Desempeño óptimo. Mantener el estándar del servicio y entregar retroalimentación positiva al supervisor.'};
-  if(pct>=75)return{clase:'ok',txt:'Desempeño adecuado con observaciones puntuales. Corregir los aspectos observados y verificar su regularización en el próximo control.'};
-  if(pct>=60)return{clase:'amber',txt:'Desempeño con observaciones. Elaborar un plan de mejora formal con responsables y plazos, y reevaluar en un nuevo control dentro del período.'};
-  return{clase:'red',txt:'Desempeño deficiente. Amerita intervención y evaluación de medida disciplinaria conforme al RIOHS, con plan de acción formal. La procedencia y el grado de la medida los define la Contraloría / RRHH según el historial y el marco legal.'};
-}
 const RES_LBL={C:'Cumple',P:'Parcial',NC:'No cumple',NA:'No aplica'};
+function gOf(i){return i.g||(itDe(i.n)?itDe(i.n).g:'L');}
+function medidaGlobal(cn){
+  if(cn.x>0)return{ok:false,text:'Se detectaron faltas GRAVÍSIMAS. Amerita intervención inmediata y evaluación de medida disciplinaria conforme al RIOHS (amonestación escrita, multa y/o término de contrato, Art. 160 del Código del Trabajo), con registro en el plan de acción y respetando el debido proceso.'};
+  if(cn.g>0)return{ok:false,text:'Se detectaron faltas GRAVES. Corresponde evaluar amonestación escrita y/o multa conforme al RIOHS, con plan de acción y verificación en un próximo control.'};
+  if(cn.l>0)return{ok:false,text:'Se detectaron faltas LEVES. Corresponde amonestación verbal o escrita conforme al RIOHS y la corrección de los aspectos observados.'};
+  return{ok:true,text:'No se detectaron incumplimientos que ameriten medida disciplinaria. Mantener el estándar del servicio y entregar retroalimentación al supervisor.'};
+}
 function verInformeControl(idx){
   const c=controles[idx];if(!c)return;
   let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){items=[];}
   openReport(informeControlModel(c,items));
 }
 function informeControlModel(c,items){
-  const pct=Number(c.pct)||0,crit=Number(c.criticos)||0;
   const fecha=c.fecha?new Date(c.fecha).toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'}):'';
   const evaluados=items.filter(i=>i.resultado);
-  const nc=items.filter(i=>i.resultado==='NC'),parc=items.filter(i=>i.resultado==='P'),criticos=nc.filter(i=>Number(i.peso)===3);
-  // Resumen por dimensión
-  const dims={};
-  PAUTA.forEach(d=>{dims[d.d.slice(0,3)]={nom:d.d,a:0,o:0,C:0,P:0,NC:0,NA:0,any:false};});
-  items.forEach(it=>{const k=it.dim;if(!dims[k])return;const r=it.resultado;if(!r)return;dims[k].any=true;if(r==='NA'){dims[k].NA++;return;}dims[k][r]++;dims[k].a+=Number(it.peso);if(r==='C')dims[k].o+=Number(it.peso);else if(r==='P')dims[k].o+=Number(it.peso)*0.5;});
-  const dimRows=Object.keys(dims).map(k=>{const d=dims[k];const p=d.any&&d.a?Math.round(d.o/d.a*100)+'%':'—';return [{v:d.nom},{v:p},{v:d.C},{v:d.P},{v:d.NC,cls:d.NC?'nc':''},{v:d.NA}];});
-  // Aspectos observados (NC y P)
-  const obsRows=items.filter(i=>i.resultado==='NC'||i.resultado==='P').map(i=>{
-    const critFlag=(i.resultado==='NC'&&Number(i.peso)===3)?{flag:{cls:'rev',txt:'CRÍTICO'}}:{};
-    return [{v:i.n},{v:i.texto,...critFlag},{v:i.peso},{v:RES_LBL[i.resultado]||i.resultado,cls:i.resultado==='NC'?'nc':''},{v:i.obs||'—'}];
-  });
-  const med=medidasSugeridas(pct,crit);
+  const nc=items.filter(i=>i.resultado==='NC'),parc=items.filter(i=>i.resultado==='P');
+  const ncX=nc.filter(i=>gOf(i)==='X'),ncG=nc.filter(i=>gOf(i)==='G'),ncL=nc.filter(i=>gOf(i)==='L');
+  const cn={x:ncX.length,g:ncG.length,l:ncL.length};
+  // Aspectos No cumple, ordenados por gravedad (gravísima → grave → leve)
+  const orden={X:0,G:1,L:2};
+  const ncOrden=[...nc].sort((a,b)=>orden[gOf(a)]-orden[gOf(b)]);
+  const ncRows=ncOrden.map(i=>{const g=gOf(i);const gf=g==='X'?{flag:{cls:'rev',txt:'GRAVÍSIMA'}}:(g==='G'?{flag:{cls:'nov',txt:'GRAVE'}}:{});
+    return [{v:i.n},{v:i.texto,...gf},{v:GRAV_LBL[g]},{v:i.obs||'—'},{v:i.respaldo||'— (sin respaldo registrado)'}];});
+  const parcRows=parc.map(i=>[{v:i.n},{v:i.texto},{v:GRAV_LBL[gOf(i)]},{v:i.obs||'—'}]);
+  const med=medidaGlobal(cn);
+  const resumenTxt=`Control ${c.tipo||''} aplicado al supervisor ${c.supervisor||''}${c.rut?(' (RUT '+c.rut+')'):''} en ${c.instalacion||''}, por ${c.controlador||''}. Se evaluaron ${evaluados.length} de ${items.length} aspectos. Incumplimientos detectados: ${cn.x} gravísima(s), ${cn.g} grave(s) y ${cn.l} leve(s); además ${parc.length} aspecto(s) en cumplimiento parcial.`;
   const blocks=[
-    {h:'Resumen del control',type:'resumen',text:`Control ${c.tipo||''} aplicado al supervisor ${c.supervisor||''}${c.rut?(' (RUT '+c.rut+')'):''} en ${c.instalacion||''}, por ${c.controlador||''}. Resultado global: ${pct}% de cumplimiento ponderado — calificación «${c.calificacion||''}». Se evaluaron ${evaluados.length} de ${items.length} aspectos, con ${crit} hallazgo(s) crítico(s), ${nc.length} «No cumple» y ${parc.length} «Parcial».`},
-    {h:'Indicadores',type:'kpis',items:[
-      {v:pct+'%',k:'Cumplimiento ponderado'},
-      {v:crit,k:'Hallazgos críticos',cls:crit?'red':''},
-      {v:nc.length,k:'No cumple',cls:nc.length?'amber':''},
-      {v:parc.length,k:'Parcial'}
+    {h:'Resumen del control',type:'resumen',text:resumenTxt},
+    {h:'Faltas detectadas',type:'kpis',items:[
+      {v:cn.x,k:'Gravísimas',cls:cn.x?'red':''},
+      {v:cn.g,k:'Graves',cls:cn.g?'red':''},
+      {v:cn.l,k:'Leves',cls:cn.l?'amber':''},
+      {v:parc.length,k:'Parciales'}
     ]},
-    {h:'Resultado por dimensión',type:'table',head:['Dimensión','Cumpl.','C','P','NC','NA'],leftCols:[0],rows:dimRows},
   ];
-  if(obsRows.length){
-    blocks.push({h:'Aspectos observados (No cumple / Parcial)',type:'table',head:['N°','Aspecto controlado','Peso','Resultado','Observación / hallazgo'],leftCols:[1,4],rows:obsRows});
+  if(ncRows.length){
+    blocks.push({h:'Aspectos «No cumple» y su respaldo',type:'table',head:['N°','Aspecto incumplido','Gravedad','Observación / hallazgo','Evidencia / respaldo registrado'],leftCols:[1,3,4],rows:ncRows});
   }
-  if(criticos.length){
-    blocks.push({h:'Hallazgos críticos (peso 3 en «No cumple»)',type:'findings',items:criticos.map(i=>({ok:false,text:`Ítem ${i.n} · ${i.texto}${i.obs?(' — '+i.obs):''}`}))});
+  if(parcRows.length){
+    blocks.push({h:'Aspectos en cumplimiento parcial',type:'table',head:['N°','Aspecto','Gravedad','Observación'],leftCols:[1,3],rows:parcRows});
   }
-  // Medidas sugeridas
-  const medItems=[{ok:med.clase==='ok',text:med.txt}];
-  nc.forEach(i=>{medItems.push({ok:false,text:`Ítem ${i.n} (peso ${i.peso}): regularizar «${i.texto}»${i.obs?(' — '+i.obs):''}, y verificar en el próximo control.`});});
+  if(ncX.length){
+    blocks.push({h:'Faltas gravísimas',type:'findings',items:ncX.map(i=>({ok:false,text:`Ítem ${i.n} · ${i.texto}${i.obs?(' — '+i.obs):''}`}))});
+  }
+  // Medidas sugeridas: global por gravedad + acción concreta por cada incumplimiento con su sanción base
+  const medItems=[med];
+  nc.forEach(i=>{const g=gOf(i);medItems.push({ok:false,text:`Ítem ${i.n} — ${GRAV_LBL[g]}: «${i.texto}». Sanción base: ${SANC_BASE[g]} Regularizar y verificar en el próximo control.`});});
   blocks.push({h:'Medidas sugeridas',type:'findings',items:medItems});
   if(c.observaciones)blocks.push({h:'Observaciones del controlador',type:'resumen',text:c.observaciones});
-  blocks.push({h:'Nota sobre las medidas',type:'resumen',text:'Las medidas indicadas son una sugerencia generada automáticamente a partir de reglas sobre el resultado del control (hallazgos críticos y bandas de cumplimiento). No constituyen una decisión. La procedencia, el grado y la formalización de cualquier medida disciplinaria son atribución de la Contraloría Interna y de RRHH, conforme al RIOHS y al marco legal vigente.'});
+  blocks.push({h:'Nota sobre las medidas',type:'resumen',text:'Las medidas indicadas son una sugerencia generada automáticamente a partir de la clasificación de gravedad de cada aspecto conforme al RIOHS. No constituyen una decisión ni una sanción. La procedencia, el grado y la formalización de cualquier medida disciplinaria —incluida la eventual escalada por reincidencia— son atribución de la Contraloría Interna y de RRHH, respetando el debido proceso y el marco legal vigente.'});
   return {meta:{titulo:'Informe de Control de Supervisión',lineas:[
     'Supervisor(a) controlado(a): '+(c.supervisor||'—')+(c.rut?(' · RUT '+c.rut):''),
     'Instalación / Mandante: '+(c.instalacion||'—'),
