@@ -847,7 +847,7 @@ document.getElementById('prevBtn').addEventListener('click',abrirPrevencion);
 document.getElementById('pvAddCond').addEventListener('click',()=>document.getElementById('pvCondList').appendChild(pvCondRow()));
 document.getElementById('pvAddMed').addEventListener('click',()=>document.getElementById('pvMedList').appendChild(pvMedRow()));
 document.getElementById('pvCancel').addEventListener('click',()=>document.getElementById('prevModalBg').classList.remove('show'));
-document.getElementById('pvX').addEventListener('click',()=>document.getElementById('prevModalBg').classList.remove('show'));
+document.getElementById('prevX').addEventListener('click',()=>document.getElementById('prevModalBg').classList.remove('show'));
 document.getElementById('pvGen').addEventListener('click',()=>{
   const instSel=document.getElementById('pvInst');
   if(!instSel.value){toast('Selecciona la instalación',true);return;}
