@@ -413,7 +413,7 @@
 <!-- =================== ADMIN =================== -->
 <div id="viewAdmin" style="display:none">
   <main>
-    <div class="tabs"><button class="tab active" data-tab="inst">🏭 Instalaciones</button><button class="tab" data-tab="user">👤 Usuarios</button></div>
+    <div class="tabs"><button class="tab active" data-tab="inst">🏭 Instalaciones</button><button class="tab" data-tab="user">👤 Usuarios</button><button class="tab" data-tab="ctl">📄 Controles</button></div>
 
     <div id="tabInst">
       <div class="admin-grid">
@@ -451,6 +451,12 @@
         <section class="panel"><div class="panel-head"><h2>Usuarios</h2><span class="reg-meta" id="userCount">0</span></div><div class="panel-body" id="userList"></div></section>
       </div>
     </div>
+
+    <div id="tabCtl" style="display:none">
+      <section class="panel"><div class="panel-head" style="display:flex;justify-content:space-between;align-items:center"><h2>Controles de supervisión registrados</h2><button class="ghost" id="ctlRefreshAdmin" style="flex:0 0 auto">↻ Actualizar</button></div>
+        <div class="panel-body"><p class="map-hint" style="margin:0 0 10px">Abre el informe o la carta de cada control. Los controles de tipo <b>Prueba</b> pueden borrarse; los reales se conservan para trazabilidad.</p><div id="ctlListAdmin" class="ctl-list-target"><p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Cargando…</p></div></div>
+      </section>
+    </div>
   </main>
 </div>
 
@@ -486,7 +492,7 @@
   <main>
     <div class="cap-card" style="margin-bottom:16px">
       <div class="cap-head" style="display:flex;justify-content:space-between;align-items:center"><div><h2>Controles registrados</h2><p class="cap-sub">Abre el informe de cada control aplicado</p></div><button class="ghost" id="ctlRefresh" style="flex:0 0 auto">↻ Actualizar</button></div>
-      <div id="ctlList"><p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Cargando…</p></div>
+      <div id="ctlList" class="ctl-list-target"><p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Cargando…</p></div>
     </div>
     <div class="cap-card">
       <div class="cap-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap"><div><h2>Pauta de Control de Supervisión</h2><p class="cap-sub">Instrumento de control en terreno · Ley 21.659 · DS 209/2024 · RIOHS</p></div><button class="ghost" id="btnTablaMaestra" style="flex:0 0 auto">📋 Tabla maestra</button></div>
@@ -689,7 +695,7 @@ function routeRol(rol){
     setTimeout(()=>{try{capMap.invalidateSize();}catch(_){}},160);
   }else if(rol==='admin'){
     document.getElementById('viewAdmin').style.display='';sub.textContent='Seguridad PK · Administración';
-    renderInst();cargarUsuarios();
+    renderInst();cargarUsuarios();loadControles();
     setTimeout(()=>{try{adminMap.invalidateSize();}catch(_){}},160);
   }else if(rol==='gerencia'){
     document.getElementById('viewGerencia').style.display='';sub.textContent='Seguridad PK · Tablero de control';
@@ -1104,18 +1110,19 @@ function resetControl(){ctlState={};ctlObs={};ctlResp={};['cSup','cRut','cInst',
 
 /* ----- Controles registrados + informe ----- */
 let controles=[];
+function ctlTargets(){return document.querySelectorAll('.ctl-list-target');}
 async function loadControles(){
-  const cont=document.getElementById('ctlList');
-  let res;try{res=await pkApi('controles',{token:TOKEN});}catch(e){cont.innerHTML='<p style="color:var(--urgent);font-size:13px;text-align:center;padding:12px">Sin conexión con el servidor.</p>';return;}
-  if(!res||!res.ok){cont.innerHTML='<p style="color:var(--urgent);font-size:13px;text-align:center;padding:12px">No se pudieron cargar los controles.</p>';return;}
+  const set=h=>ctlTargets().forEach(c=>c.innerHTML=h);
+  let res;try{res=await pkApi('controles',{token:TOKEN});}catch(e){set('<p style="color:var(--urgent);font-size:13px;text-align:center;padding:12px">Sin conexión con el servidor.</p>');return;}
+  if(!res||!res.ok){set('<p style="color:var(--urgent);font-size:13px;text-align:center;padding:12px">No se pudieron cargar los controles.</p>');return;}
   controles=(res.controles||[]).slice().reverse();
   renderCtlList();
 }
 function bandaCls(pct){return pct>=90?'b-sin':pct>=75?'b-sin':pct>=60?'b-con':'b-rej';}
 function renderCtlList(){
-  const cont=document.getElementById('ctlList');
-  if(!controles.length){cont.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Aún no hay controles registrados.</p>';return;}
-  cont.innerHTML=controles.map((c,idx)=>{let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){}
+  const targets=ctlTargets();if(!targets.length)return;
+  if(!controles.length){targets.forEach(c=>c.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Aún no hay controles registrados.</p>');return;}
+  const html=controles.map((c,idx)=>{let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){}
     const nc=items.filter(i=>i.resultado==='NC');const g=nc.filter(i=>gOf(i)==='G').length,x=nc.filter(i=>gOf(i)==='X').length,l=nc.filter(i=>gOf(i)==='L').length;
     const fecha=c.fecha?new Date(c.fecha).toLocaleDateString('es-CL'):'';
     const esPrueba=(c.tipo||'')==='Prueba';
@@ -1124,6 +1131,7 @@ function renderCtlList(){
     return `<div class="row-item"${esPrueba?' style="opacity:.85"':''}><div class="row-top"><span class="row-name">${esc(c.supervisor||'—')}</span>${badge}</div>
     <div class="row-meta"><span>${esc(c.instalacion||'')}</span><span>${esc(c.tipo||'')} · ${esc(fecha)}</span>${(!esPrueba&&x>0)?`<span style="color:var(--urgent);font-weight:700">⚠ ${x} gravísima(s)</span>`:''}</div>
     <div class="row-btns"><span style="font-size:11px;color:var(--muted)">${esc(c.folio||'')}</span><button class="mini-btn" onclick="verInformeControl(${idx})">📄 Ver informe</button>${(l+g+x)>0?`<button class="mini-btn" onclick="abrirCarta(${idx})">✉ Carta</button>`:''}${puedeBorrar?`<button class="mini-btn" style="color:var(--urgent);border-color:#f2c9c4" onclick="borrarControl(${idx})">🗑 Borrar</button>`:''}</div></div>`;}).join('');
+  targets.forEach(c=>c.innerHTML=html);
 }
 async function borrarControl(idx){
   const c=controles[idx];if(!c)return;
@@ -1624,9 +1632,11 @@ document.getElementById('emConfirm').addEventListener('click',async()=>{const de
 /* ====================== ADMIN: TABS ====================== */
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
-  const tab=t.dataset.tab;document.getElementById('tabInst').style.display=tab==='inst'?'':'none';document.getElementById('tabUser').style.display=tab==='user'?'':'none';
+  const tab=t.dataset.tab;document.getElementById('tabInst').style.display=tab==='inst'?'':'none';document.getElementById('tabUser').style.display=tab==='user'?'':'none';document.getElementById('tabCtl').style.display=tab==='ctl'?'':'none';
   if(tab==='inst')setTimeout(()=>{try{adminMap.invalidateSize();}catch(_){}},150);
+  if(tab==='ctl')loadControles();
 }));
+document.getElementById('ctlRefreshAdmin').addEventListener('click',loadControles);
 
 /* ADMIN: instalaciones */
 let adminMap,aMarker,aCircle,aPunto=null,editInstId=null;
