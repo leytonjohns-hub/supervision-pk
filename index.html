@@ -761,6 +761,7 @@ function setModoRonda(){
   document.getElementById('hSub').textContent='Seguridad PK · Registro de ronda';
   document.getElementById('fSup').value=sesion.nombre;document.getElementById('fSup').readOnly=true;
   document.getElementById('ccRondasPanel').style.display=(sesion.rol==='control'||sesion.rol==='admin')?'':'none';
+  document.getElementById('prevBtn').style.display=(sesion&&sesion.prev)?'':'none';
   poblarInstSelect();
   setTimeout(()=>{try{capMap.invalidateSize();}catch(_){}},160);
 }
