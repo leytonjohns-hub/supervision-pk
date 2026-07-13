@@ -152,6 +152,12 @@
   .pi-grav{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 8px;border-radius:20px;flex:0 0 auto}
   .pi-grav.g-L{background:#eef1ea;color:#2E7D32}.pi-grav.g-G{background:#fbf0dc;color:#8a5a12}.pi-grav.g-X{background:#fdecea;color:var(--urgent-dark)}
   .pi-evi{font-size:12px;color:#0f5f6b;background:#e8f4f6;border-radius:7px;padding:7px 10px;margin-bottom:8px;line-height:1.4}
+  .pi-det-btn{background:none;border:none;color:var(--pk-teal,#1A7A8A);font-size:12px;font-weight:600;cursor:pointer;padding:2px 0;margin-bottom:4px;font-family:inherit}
+  .pi-det-btn.act{color:var(--pk-green-dark)}
+  .pi-det{max-height:0;overflow:hidden;transition:max-height .28s ease}
+  .pi-det.open{max-height:320px;margin-bottom:8px}
+  .pi-det .pdt{font-size:12px;line-height:1.5;color:#374151;background:#f6f8f4;border-left:3px solid var(--laurel-soft,#c8d6bd);padding:5px 10px;margin-bottom:4px;border-radius:0 6px 6px 0}
+  .pi-det .pdt b{color:var(--pk-green-dark)}
   .carta-config{background:#f6f8f4;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
   .cc-field{margin-bottom:12px}.cc-field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px}
   .cc-field select,.cc-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;background:#fff}
@@ -483,12 +489,12 @@
       <div id="ctlList"><p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Cargando…</p></div>
     </div>
     <div class="cap-card">
-      <div class="cap-head"><h2>Pauta de Control de Supervisión</h2><p class="cap-sub">Instrumento de control en terreno · Ley 21.659 · DS 209/2024 · RIOHS</p></div>
+      <div class="cap-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap"><div><h2>Pauta de Control de Supervisión</h2><p class="cap-sub">Instrumento de control en terreno · Ley 21.659 · DS 209/2024 · RIOHS</p></div><button class="ghost" id="btnTablaMaestra" style="flex:0 0 auto">📋 Tabla maestra</button></div>
       <div class="form-grid2">
         <div class="field"><label>Supervisor(a) controlado(a) <span class="req">*</span></label><input type="text" id="cSup" placeholder="Nombre del supervisor"></div>
         <div class="field"><label>RUT</label><input type="text" id="cRut" placeholder="12.345.678-9"></div>
         <div class="field"><label>Instalación / Mandante <span class="req">*</span></label><input type="text" id="cInst" placeholder="Instalación o cliente" list="clientes"></div>
-        <div class="field"><label>Tipo de control <span class="req">*</span></label><select id="cTipo"><option value="Programado">Programado</option><option value="Sorpresa">Sorpresa</option></select></div>
+        <div class="field"><label>Tipo de control <span class="req">*</span></label><select id="cTipo"><option value="Programado">Programado</option><option value="Sorpresa">Sorpresa</option><option value="Prueba">Prueba (borrable)</option></select></div>
         <div class="field"><label>Controlador</label><input type="text" id="cControlador" readonly></div>
         <div class="field"><label>Fecha</label><input type="text" id="cFecha" readonly></div>
       </div>
@@ -575,6 +581,12 @@
   <div class="modal-head"><h3 id="reportTitle">Reporte</h3><button class="x" id="reportX">&times;</button></div>
   <div class="modal-body"><div class="rep-scroll"><div id="reportDoc" class="doc"></div></div></div>
   <div class="modal-foot"><button class="btn-cancel" id="reportClose">Cerrar</button><button class="btn-confirm" style="background:#0e0f0c;flex:1" id="reportCopy">Copiar</button><button class="btn-confirm" style="background:var(--pk-green);flex:1.4" id="reportPdf">⬇ Descargar PDF</button></div>
+</div></div>
+
+<div class="modal-bg" id="tablaModalBg"><div class="modal" style="max-width:980px">
+  <div class="modal-head"><h3>Tabla maestra — Clasificación y evidencia</h3><button class="x" id="tablaX">&times;</button></div>
+  <div class="modal-body"><div class="rep-scroll"><div id="tablaMaestraBox"></div></div></div>
+  <div class="modal-foot"><button class="btn-cancel" id="tablaClose">Cerrar</button></div>
 </div></div>
 
 <div class="modal-bg" id="cartaModalBg"><div class="modal">
@@ -971,6 +983,44 @@ const PAUTA=[
 ];
 const GRAV_LBL={L:'Leve',G:'Grave',X:'Gravísima'};
 const SANC_BASE={L:'Amonestación verbal o escrita (Art. 65 bis / 112 RIOHS).',G:'Amonestación escrita y/o multa de hasta 25% de la remuneración diaria (Art. 65 bis / 113 RIOHS).',X:'Amonestación escrita, multa y/o término de contrato conforme al Art. 160 del Código del Trabajo.'};
+// Detalle maestro por aspecto: tipo de evidencia + fundamento (RIOHS / Descriptor)
+const DETALLE={
+ 1:{ti:'Registro + Foto',fu:'Ausencia injustificada (grave); supervisión en terreno es función esencial del cargo.'},
+ 2:{ti:'Foto',fu:'Presentarse sin uniforme (leve); presentación obligatoria (descriptor).'},
+ 3:{ti:'Foto + Documento',fu:'OS-10 vencida (grave); requisito habilitante obligatorio.'},
+ 4:{ti:'Documento + Foto',fu:'Puesto descubierto afecta el servicio (grave; gravísima si es crítico).'},
+ 5:{ti:'Registro',fu:'No control de asistencia (leve; grave si reiterado o encubre ausencias).'},
+ 6:{ti:'Documento + Foto',fu:'No adhesión a la pauta del servicio (leve; grave si reiterado).'},
+ 7:{ti:'Foto + Documento',fu:'No uso de EPP (leve 1.ª vez; grave si reiterado).'},
+ 8:{ti:'Foto + Documento',fu:'Registros y trazabilidad (leve; grave si reiterado).'},
+ 9:{ti:'Foto + Documento',fu:'Registros y trazabilidad (leve; grave si reiterado).'},
+ 10:{ti:'Documento + Acta',fu:'No adhesión a consignas del cliente (leve; grave si reiterado).'},
+ 11:{ti:'Registro + Foto',fu:'Afecta la función preventiva esencial (grave; gravísima si expone la seguridad).'},
+ 12:{ti:'Registro',fu:'Trazabilidad de la información (leve; grave si reiterado).'},
+ 13:{ti:'Foto + Documento',fu:'No reportar falla del CCTV (grave); afecta la seguridad.'},
+ 14:{ti:'Acta + Foto',fu:'Sistemas críticos inoperativos y no reportados (grave).'},
+ 15:{ti:'Acta + Foto',fu:'Equipamiento operativo (leve; grave si deja el servicio incomunicado).'},
+ 16:{ti:'Documento + Registro',fu:'No reportar novedad/incidente (grave, RIOHS).'},
+ 17:{ti:'Foto',fu:'Integridad del registro (grave); adulteración = gravísima (probidad).'},
+ 18:{ti:'Foto',fu:'No registrar novedades relevantes (grave, RIOHS).'},
+ 19:{ti:'Foto + Documento',fu:'Registros y trazabilidad (leve; grave si reiterado).'},
+ 20:{ti:'Documento',fu:'No reportar incidentes (grave); función de reporte.'},
+ 21:{ti:'Acta',fu:'Competencia esencial de emergencias (grave).'},
+ 22:{ti:'Foto + Acta',fu:'Información preventiva disponible (leve; grave si reiterado).'},
+ 23:{ti:'Foto',fu:'Medios de emergencia (DS 44); inoperativos/vencidos = grave.'},
+ 24:{ti:'Documento + Acta',fu:'Gestión de personal (leve; grave si su omisión genera riesgo).'},
+ 25:{ti:'Documento',fu:'Desarrollo del personal (leve).'},
+ 26:{ti:'Documento + Registro',fu:'Coordinación con mandantes (leve; grave si afecta el contrato).'},
+ 27:{ti:'Registro',fu:'Trazabilidad de requerimientos (leve; grave si reiterado).'},
+ 28:{ti:'Documento + Acta',fu:'No adhesión a consignas (leve; grave si reiterado).'},
+ 29:{ti:'Documento',fu:'Cumplimiento laboral; su incumplimiento expone a la empresa (grave).'},
+ 30:{ti:'Documento',fu:'Respaldo documental obligatorio (leve; grave ante fiscalización).'},
+ 31:{ti:'Documento + Registro',fu:'Discontinuidad del servicio por gestión deficiente (grave).'},
+ 32:{ti:'Documento',fu:'Vulneración de la normativa de jornada (grave).'},
+ 33:{ti:'Registro',fu:'No acatar/omitir indicaciones (leve; grave si reiterado).'},
+ 34:{ti:'Acta',fu:'Conducta y liderazgo (leve); acoso/violencia = gravísima.'},
+ 35:{ti:'Acta + Foto',fu:'Vulneración de DD.HH. o exceso de fuerza (gravísima; Art. 160 CT).'}
+};
 const PAUTA_TOTAL=PAUTA.reduce((a,d)=>a+d.items.length,0);
 let ctlState={},ctlObs={},ctlResp={},controlInit=false;
 function initControl(){
@@ -986,12 +1036,20 @@ function renderPauta(){
   w.innerHTML=PAUTA.map(dim=>`<div class="dim-block"><div class="dim-title"><span>${esc(dim.d)}</span><span class="dpct" id="dpct_${dim.d.slice(0,3)}"></span></div>${dim.items.map(it=>`
     <div class="pauta-item" id="pi_${it.n}"><div class="pi-top"><span class="pi-n">${it.n}</span><span class="pi-grav g-${it.g}">${GRAV_LBL[it.g]}</span><span class="pi-q">${esc(it.t)}</span></div>
     <div class="pi-verif">Verificación: ${esc(it.v)}</div>
+    <button type="button" class="pi-det-btn" data-det="${it.n}">ⓘ Ver detalle (evidencia y fundamento)</button>
+    <div class="pi-det" id="pidet_${it.n}">
+      <div class="pdt"><b>Evidencia esperada:</b> ${esc(it.ev)}</div>
+      <div class="pdt"><b>Tipo de evidencia:</b> ${esc((DETALLE[it.n]||{}).ti||'—')}</div>
+      <div class="pdt"><b>Fundamento:</b> ${esc((DETALLE[it.n]||{}).fu||'—')}</div>
+      <div class="pdt"><b>Sanción base si «No cumple»:</b> ${esc(SANC_BASE[it.g])}</div>
+    </div>
     <div class="pi-opts"><button type="button" data-n="${it.n}" data-v="C">C</button><button type="button" data-n="${it.n}" data-v="P">P</button><button type="button" data-n="${it.n}" data-v="NC">NC</button><button type="button" data-n="${it.n}" data-v="NA">NA</button></div>
     <div class="pi-obs" id="piobs_${it.n}">
-      <div class="pi-evi">📎 Evidencia esperada: ${esc(it.ev)}</div>
+      <div class="pi-evi">📎 Evidencia esperada (${esc((DETALLE[it.n]||{}).ti||'')}): ${esc(it.ev)}</div>
       <textarea data-obs="${it.n}" placeholder="Observación / hallazgo (obligatorio)…"></textarea>
       <textarea data-resp="${it.n}" placeholder="Respaldo registrado: describe la evidencia obtenida y su ubicación (foto, documento, acta, N° de folio en carpeta…)"></textarea>
     </div></div>`).join('')}</div>`).join('');
+  w.querySelectorAll('.pi-det-btn').forEach(b=>b.addEventListener('click',()=>{document.getElementById('pidet_'+b.dataset.det).classList.toggle('open');b.classList.toggle('act');}));
   w.querySelectorAll('.pi-opts button').forEach(b=>b.addEventListener('click',()=>setPauta(+b.dataset.n,b.dataset.v)));
   w.querySelectorAll('textarea[data-obs]').forEach(t=>t.addEventListener('input',e=>{ctlObs[+e.target.dataset.obs]=e.target.value;}));
   w.querySelectorAll('textarea[data-resp]').forEach(t=>t.addEventListener('input',e=>{ctlResp[+e.target.dataset.resp]=e.target.value;}));
@@ -1060,12 +1118,41 @@ function renderCtlList(){
   cont.innerHTML=controles.map((c,idx)=>{let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){}
     const nc=items.filter(i=>i.resultado==='NC');const g=nc.filter(i=>gOf(i)==='G').length,x=nc.filter(i=>gOf(i)==='X').length,l=nc.filter(i=>gOf(i)==='L').length;
     const fecha=c.fecha?new Date(c.fecha).toLocaleDateString('es-CL'):'';
-    const badge=(g+x)>0?`<span class="badge-cell b-rej">${g+x} grave(s)+</span>`:(l>0?`<span class="badge-cell b-con">${l} leve(s)</span>`:`<span class="badge-cell b-sin">Sin faltas</span>`);
-    return `<div class="row-item"><div class="row-top"><span class="row-name">${esc(c.supervisor||'—')}</span>${badge}</div>
-    <div class="row-meta"><span>${esc(c.instalacion||'')}</span><span>${esc(c.tipo||'')} · ${esc(fecha)}</span>${x>0?`<span style="color:var(--urgent);font-weight:700">⚠ ${x} gravísima(s)</span>`:''}</div>
-    <div class="row-btns"><span style="font-size:11px;color:var(--muted)">${esc(c.folio||'')}</span><button class="mini-btn" onclick="verInformeControl(${idx})">📄 Ver informe</button>${(l+g+x)>0?`<button class="mini-btn" onclick="abrirCarta(${idx})">✉ Carta</button>`:''}</div></div>`;}).join('');
+    const esPrueba=(c.tipo||'')==='Prueba';
+    const badge=esPrueba?`<span class="badge-cell" style="background:#eceff1;color:#607d8b">Prueba</span>`:((g+x)>0?`<span class="badge-cell b-rej">${g+x} grave(s)+</span>`:(l>0?`<span class="badge-cell b-con">${l} leve(s)</span>`:`<span class="badge-cell b-sin">Sin faltas</span>`));
+    const puedeBorrar=esPrueba&&(sesion.rol==='admin'||sesion.rol==='control');
+    return `<div class="row-item"${esPrueba?' style="opacity:.85"':''}><div class="row-top"><span class="row-name">${esc(c.supervisor||'—')}</span>${badge}</div>
+    <div class="row-meta"><span>${esc(c.instalacion||'')}</span><span>${esc(c.tipo||'')} · ${esc(fecha)}</span>${(!esPrueba&&x>0)?`<span style="color:var(--urgent);font-weight:700">⚠ ${x} gravísima(s)</span>`:''}</div>
+    <div class="row-btns"><span style="font-size:11px;color:var(--muted)">${esc(c.folio||'')}</span><button class="mini-btn" onclick="verInformeControl(${idx})">📄 Ver informe</button>${(l+g+x)>0?`<button class="mini-btn" onclick="abrirCarta(${idx})">✉ Carta</button>`:''}${puedeBorrar?`<button class="mini-btn" style="color:var(--urgent);border-color:#f2c9c4" onclick="borrarControl(${idx})">🗑 Borrar</button>`:''}</div></div>`;}).join('');
+}
+async function borrarControl(idx){
+  const c=controles[idx];if(!c)return;
+  if((c.tipo||'')!=='Prueba'){toast('Solo se pueden borrar controles de tipo Prueba',true);return;}
+  if(!confirm(`¿Borrar definitivamente este control de prueba?\n\nSupervisor: ${c.supervisor||'—'}\nFolio: ${c.folio||'—'}\n\nEsta acción no se puede deshacer.`))return;
+  try{
+    const res=await pkApi('borrarControl',{token:TOKEN,folio:c.folio});
+    if(res&&res.ok){toast('Control de prueba borrado');loadControles();}
+    else{toast((res&&res.error)||'No se pudo borrar',true);}
+  }catch(e){console.error(e);toast('Error de conexión',true);}
 }
 document.getElementById('ctlRefresh').addEventListener('click',loadControles);
+
+/* ----- Tabla maestra consultable ----- */
+function renderTablaMaestra(){
+  const gcol={L:'#2E7D32',G:'#B8860B',X:'#B3261E'};
+  let html='<table class="rep"><thead><tr><th>N°</th><th>Aspecto</th><th class="num">Grav.</th><th>Evidencia esperada</th><th>Tipo</th><th>Fundamento</th></tr></thead><tbody>';
+  PAUTA.forEach(dim=>{
+    html+=`<tr><td colspan="6" style="background:#f4f7f2;font-weight:700;color:var(--pk-green-dark)">${esc(dim.d)}</td></tr>`;
+    dim.items.forEach(it=>{const dt=DETALLE[it.n]||{};
+      html+=`<tr><td class="num" style="font-weight:700;color:var(--muted)">${it.n}</td><td>${esc(it.t)}</td><td class="num" style="font-weight:700;color:${gcol[it.g]}">${GRAV_LBL[it.g]}</td><td>${esc(it.ev)}</td><td style="color:var(--pk-teal,#1A7A8A);font-weight:600">${esc(dt.ti||'—')}</td><td style="color:#555">${esc(dt.fu||'—')}</td></tr>`;
+    });
+  });
+  html+='</tbody></table>';
+  document.getElementById('tablaMaestraBox').innerHTML=html;
+}
+document.getElementById('btnTablaMaestra').addEventListener('click',()=>{renderTablaMaestra();document.getElementById('tablaModalBg').classList.add('show');});
+document.getElementById('tablaClose').addEventListener('click',()=>document.getElementById('tablaModalBg').classList.remove('show'));
+document.getElementById('tablaX').addEventListener('click',()=>document.getElementById('tablaModalBg').classList.remove('show'));
 
 const RES_LBL={C:'Cumple',P:'Parcial',NC:'No cumple',NA:'No aplica'};
 function gOf(i){return i.g||(itDe(i.n)?itDe(i.n).g:'L');}
@@ -1223,7 +1310,7 @@ async function loadStats(){
 function statFiltrados(){
   const desde=document.getElementById('statDesde').value?new Date(document.getElementById('statDesde').value):null;
   const hasta=document.getElementById('statHasta').value?new Date(document.getElementById('statHasta').value+'T23:59:59'):null;
-  return statControles.filter(c=>{const f=new Date(c.fecha);if(desde&&f<desde)return false;if(hasta&&f>hasta)return false;return true;});
+  return statControles.filter(c=>{if((c.tipo||'')==='Prueba')return false;const f=new Date(c.fecha);if(desde&&f<desde)return false;if(hasta&&f>hasta)return false;return true;});
 }
 function agregarStats(ctrls){
   const map={};
