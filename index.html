@@ -173,6 +173,13 @@
   .hub-go{margin-top:6px;font-size:12.5px;font-weight:700;color:var(--pk-green)}
   .hub-title{font-size:20px;color:var(--pk-green-dark);margin:0 0 4px}
   .hub-sub{font-size:13px;color:var(--muted);margin:0 0 20px}
+  @media(max-width:520px){
+    .hub-grid{grid-template-columns:1fr}
+    .hub-card{padding:20px 16px}
+    .hub-ic{width:54px;height:54px;font-size:26px}
+    .hub-banner{padding:13px 14px}
+    .hub-banner li{font-size:12.5px}
+  }
   .carta-config{background:#f6f8f4;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
   .cc-field{margin-bottom:12px}.cc-field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px}
   .cc-field select,.cc-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;background:#fff}
@@ -326,8 +333,8 @@
   .flag.rev{background:#fdecea;color:var(--urgent-dark)}.flag.nov{background:#fbf0dc;color:#8a5a12}
   .rep td.nc{color:var(--urgent-dark);font-weight:700}
   #ctlModeBar{background:var(--pk-teal,#1A7A8A);position:sticky;top:0;z-index:20}
-  .mode-inner{max-width:1080px;margin:0 auto;padding:8px 16px;display:flex;gap:8px}
-  .mode-btn{flex:1;font-family:'Saira',sans-serif;font-weight:600;font-size:13px;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,.4);background:transparent;color:rgba(255,255,255,.85);cursor:pointer;transition:all .15s}
+  .mode-inner{max-width:1080px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap}
+  .mode-btn{flex:1 1 auto;min-width:132px;font-family:'Saira',sans-serif;font-weight:600;font-size:13px;padding:9px 12px;border-radius:9px;border:1.5px solid rgba(255,255,255,.4);background:transparent;color:rgba(255,255,255,.85);cursor:pointer;transition:all .15s}
   .mode-btn.act{background:#fff;color:var(--pk-teal,#1A7A8A);border-color:#fff}
   .badge-cell{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:700}
   .b-sin{background:#e6efe3;color:var(--pk-green-dark)}.b-con{background:var(--amber);color:#fff}.b-rej{background:var(--urgent);color:#fff}
@@ -364,6 +371,7 @@
   <button type="button" id="modeHub" class="mode-btn" style="background:#0e0f0c;color:#fff">⌂ Registrar otro control</button>
   <button type="button" id="modeCtl" class="mode-btn act">🛡 Control de supervisión</button>
   <button type="button" id="modeRonda" class="mode-btn">📋 Registrar ronda</button>
+  <button type="button" id="modePrev" class="mode-btn">🦺 Prevención</button>
   <button type="button" id="modeStats" class="mode-btn">📊 Estadísticas</button>
 </div></div>
 
@@ -651,30 +659,32 @@
   <div class="modal-foot"><button class="btn-cancel" id="reportClose">Cerrar</button><button class="btn-confirm" style="background:#4a4a45;flex:.8" id="reportCopy">Copiar</button><button class="btn-confirm" style="background:#0e0f0c;flex:1" id="reportMail">✉ Enviar</button><button class="btn-confirm" style="background:var(--pk-green);flex:1.1" id="reportPdf">⬇ PDF</button></div>
 </div></div>
 
-<div class="modal-bg" id="prevModalBg"><div class="modal" style="max-width:720px">
-  <div class="modal-head"><h3>Informe de Prevención de Riesgos</h3><button class="x" id="prevX">&times;</button></div>
-  <div class="modal-body">
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px">Los datos de identificación se cargan automáticamente. Completa las observaciones de terreno.</p>
-    <div class="form-grid2">
-      <div class="field"><label>Instalación / Faena <span class="req">*</span></label><select id="pvInst"></select></div>
-      <div class="field"><label>Puesto / Sector</label><input type="text" id="pvPuesto" placeholder="Ej: Acceso principal"></div>
-      <div class="field"><label>Mandante</label><input type="text" id="pvMandante" readonly style="background:#f4f4f0"></div>
-      <div class="field"><label>Turno</label><select id="pvTurno"><option>Día</option><option>Noche</option><option>Mixto</option></select></div>
+<div id="viewPrev" style="display:none">
+  <main>
+    <div class="cap-card">
+      <div class="cap-head"><h2>Control de Prevención de Riesgos</h2><p class="cap-sub">Informe de prevención en terreno · Ley 21.659 · DS 44</p></div>
+      <p style="font-size:12.5px;color:var(--muted);margin:2px 0 14px">Los datos de identificación se cargan automáticamente. Completa las observaciones de terreno.</p>
+      <div class="form-grid2">
+        <div class="field"><label>Instalación / Faena <span class="req">*</span></label><select id="pvInst"></select></div>
+        <div class="field"><label>Puesto / Sector</label><input type="text" id="pvPuesto" placeholder="Ej: Acceso principal"></div>
+        <div class="field"><label>Mandante</label><input type="text" id="pvMandante" readonly style="background:#f4f4f0"></div>
+        <div class="field"><label>Turno</label><select id="pvTurno"><option>Día</option><option>Noche</option><option>Mixto</option></select></div>
+      </div>
+      <div style="margin:14px 0 6px;font-weight:600;font-size:13px;color:var(--pk-green-dark)">Condiciones inseguras detectadas</div>
+      <div id="pvCondList"></div>
+      <button type="button" class="ghost" id="pvAddCond" style="margin-top:6px">+ Agregar condición</button>
+      <div class="field" style="margin-top:14px"><label>Actos inseguros observados</label><textarea id="pvActos" placeholder="Conductas del personal que implican riesgo (una por línea)…"></textarea></div>
+      <div class="field"><label>Estado de EPP</label><textarea id="pvEpp" placeholder="Disponibilidad, uso efectivo y estado de los elementos de protección personal…"></textarea></div>
+      <div class="field"><label>Medios y condiciones de emergencia</label><textarea id="pvEmerg" placeholder="Extintores (carga vigente), señalética, vías de evacuación, botiquín…"></textarea></div>
+      <div style="margin:14px 0 6px;font-weight:600;font-size:13px;color:var(--pk-green-dark)">Medidas correctivas propuestas</div>
+      <div id="pvMedList"></div>
+      <button type="button" class="ghost" id="pvAddMed" style="margin-top:6px">+ Agregar medida</button>
+      <div class="field" style="margin-top:14px"><label>Charla / capacitación del turno</label><textarea id="pvCharla" placeholder="Charla de seguridad, inducción o simulacro realizado en el turno (si aplica)…"></textarea></div>
+      <div class="field"><label>Observaciones generales y respaldo</label><textarea id="pvObs" placeholder="Síntesis y referencia a la evidencia (fotos, registros)…"></textarea></div>
+      <button class="submit-btn" id="pvGen" style="margin-top:16px;background:#8a5a12">🦺 Generar informe de prevención</button>
     </div>
-    <div style="margin:14px 0 6px;font-weight:600;font-size:13px;color:var(--pk-green-dark)">Condiciones inseguras detectadas</div>
-    <div id="pvCondList"></div>
-    <button type="button" class="ghost" id="pvAddCond" style="margin-top:6px">+ Agregar condición</button>
-    <div class="field" style="margin-top:14px"><label>Actos inseguros observados</label><textarea id="pvActos" placeholder="Conductas del personal que implican riesgo (una por línea)…"></textarea></div>
-    <div class="field"><label>Estado de EPP</label><textarea id="pvEpp" placeholder="Disponibilidad, uso efectivo y estado de los elementos de protección personal…"></textarea></div>
-    <div class="field"><label>Medios y condiciones de emergencia</label><textarea id="pvEmerg" placeholder="Extintores (carga vigente), señalética, vías de evacuación, botiquín…"></textarea></div>
-    <div style="margin:14px 0 6px;font-weight:600;font-size:13px;color:var(--pk-green-dark)">Medidas correctivas propuestas</div>
-    <div id="pvMedList"></div>
-    <button type="button" class="ghost" id="pvAddMed" style="margin-top:6px">+ Agregar medida</button>
-    <div class="field" style="margin-top:14px"><label>Charla / capacitación del turno</label><textarea id="pvCharla" placeholder="Charla de seguridad, inducción o simulacro realizado en el turno (si aplica)…"></textarea></div>
-    <div class="field"><label>Observaciones generales y respaldo</label><textarea id="pvObs" placeholder="Síntesis y referencia a la evidencia (fotos, registros)…"></textarea></div>
-  </div>
-  <div class="modal-foot"><button class="btn-cancel" id="pvCancel">Cerrar</button><button class="btn-confirm" style="background:#8a5a12;flex:1.3" id="pvGen">Generar informe</button></div>
-</div></div>
+  </main>
+</div>
 
 <div class="modal-bg" id="tablaModalBg"><div class="modal" style="max-width:980px">
   <div class="modal-head"><h3>Tabla maestra — Clasificación y evidencia</h3><button class="x" id="tablaX">&times;</button></div>
@@ -778,7 +788,7 @@ function routeRol(rol){
     document.getElementById('viewSupervisor').style.display='';document.getElementById('fab').classList.add('show');
     sub.textContent='Seguridad PK · Terreno';
     document.getElementById('fSup').value=sesion.nombre;document.getElementById('fSup').readOnly=true;
-    document.getElementById('prevBtn').style.display=(sesion&&sesion.prev)?'':'none';
+    document.getElementById('prevBtn').style.display='none';
     document.getElementById('ccRondasPanel').style.display='none';
     poblarInstSelect();
     setTimeout(()=>{try{capMap.invalidateSize();}catch(_){}},160);
@@ -795,7 +805,7 @@ function routeRol(rol){
 }
 /* ===== Hub de controles (Control Central) ===== */
 function irAlHub(){
-  ['viewSupervisor','viewControl','viewStats'].forEach(v=>document.getElementById(v).style.display='none');
+  ['viewSupervisor','viewControl','viewStats','viewPrev'].forEach(v=>document.getElementById(v).style.display='none');
   document.getElementById('ctlModeBar').style.display='none';
   document.getElementById('fab').classList.remove('show');
   document.getElementById('viewHub').style.display='';
@@ -807,48 +817,53 @@ function abrirSeccion(sec){
   document.getElementById('ctlModeBar').style.display='';
   if(sec==='sup')setModoControl();
   else if(sec==='ronda')setModoRonda();
+  else if(sec==='prev')setModoPrev();
   else if(sec==='stats')setModoStats();
 }
 document.getElementById('cardSup').addEventListener('click',()=>abrirSeccion('sup'));
 document.getElementById('cardRonda').addEventListener('click',()=>abrirSeccion('ronda'));
-document.getElementById('cardPrev').addEventListener('click',()=>{abrirPrevencion();});
+document.getElementById('cardPrev').addEventListener('click',()=>abrirSeccion('prev'));
 document.getElementById('hubStats').addEventListener('click',()=>abrirSeccion('stats'));
 document.getElementById('modeHub').addEventListener('click',irAlHub);
 /* ===== Control Central: alterna entre control de supervisión y registro de ronda ===== */
 function setModoControl(){
   document.getElementById('viewSupervisor').style.display='none';
   document.getElementById('viewStats').style.display='none';
+  document.getElementById('viewPrev').style.display='none';
   document.getElementById('viewControl').style.display='';
   document.getElementById('fab').classList.remove('show');
-  document.getElementById('modeCtl').classList.add('act');document.getElementById('modeRonda').classList.remove('act');document.getElementById('modeStats').classList.remove('act');
+  document.getElementById('modeCtl').classList.add('act');['modeRonda','modeStats','modePrev'].forEach(id=>document.getElementById(id).classList.remove('act'));
   document.getElementById('hSub').textContent='Seguridad PK · Control de Supervisión';
   initControl();
 }
 function setModoRonda(){
   document.getElementById('viewControl').style.display='none';
   document.getElementById('viewStats').style.display='none';
+  document.getElementById('viewPrev').style.display='none';
   document.getElementById('viewSupervisor').style.display='';
   document.getElementById('fab').classList.add('show');
-  document.getElementById('modeRonda').classList.add('act');document.getElementById('modeCtl').classList.remove('act');document.getElementById('modeStats').classList.remove('act');
+  document.getElementById('modeRonda').classList.add('act');['modeCtl','modeStats','modePrev'].forEach(id=>document.getElementById(id).classList.remove('act'));
   document.getElementById('hSub').textContent='Seguridad PK · Registro de ronda';
   document.getElementById('fSup').value=sesion.nombre;document.getElementById('fSup').readOnly=true;
   document.getElementById('ccRondasPanel').style.display=(sesion.rol==='control'||sesion.rol==='admin')?'':'none';
-  document.getElementById('prevBtn').style.display=(sesion&&sesion.prev)?'':'none';
+  document.getElementById('prevBtn').style.display='none';
   poblarInstSelect();
   setTimeout(()=>{try{capMap.invalidateSize();}catch(_){}},160);
 }
 function setModoStats(){
   document.getElementById('viewControl').style.display='none';
   document.getElementById('viewSupervisor').style.display='none';
+  document.getElementById('viewPrev').style.display='none';
   document.getElementById('viewStats').style.display='';
   document.getElementById('fab').classList.remove('show');
-  document.getElementById('modeStats').classList.add('act');document.getElementById('modeCtl').classList.remove('act');document.getElementById('modeRonda').classList.remove('act');
+  document.getElementById('modeStats').classList.add('act');['modeCtl','modeRonda','modePrev'].forEach(id=>document.getElementById(id).classList.remove('act'));
   document.getElementById('statBack').style.display='none';
   document.getElementById('hSub').textContent='Seguridad PK · Estadísticas de control';
   loadStats();
 }
 document.getElementById('modeCtl').addEventListener('click',setModoControl);
 document.getElementById('modeRonda').addEventListener('click',setModoRonda);
+document.getElementById('modePrev').addEventListener('click',setModoPrev);
 document.getElementById('modeStats').addEventListener('click',setModoStats);
 
 /* ----- Control Central: rondas de todos los supervisores ----- */
@@ -910,22 +925,27 @@ function abrirPrevencion(){
   document.getElementById('pvTurno').value='Día';
   const cl=document.getElementById('pvCondList');cl.innerHTML='';cl.appendChild(pvCondRow());
   const ml=document.getElementById('pvMedList');ml.innerHTML='';ml.appendChild(pvMedRow());
-  document.getElementById('prevModalBg').classList.add('show');
+}
+function setModoPrev(){
+  ['viewControl','viewSupervisor','viewStats'].forEach(v=>document.getElementById(v).style.display='none');
+  document.getElementById('viewPrev').style.display='';
+  document.getElementById('fab').classList.remove('show');
+  document.getElementById('modePrev').classList.add('act');['modeCtl','modeRonda','modeStats'].forEach(id=>document.getElementById(id).classList.remove('act'));
+  document.getElementById('hSub').textContent='Seguridad PK · Control de Prevención de Riesgos';
+  abrirPrevencion();
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 document.getElementById('pvInst').addEventListener('change',e=>{
   const inst=instalaciones.find(i=>String(i.id)===e.target.value);
   document.getElementById('pvMandante').value=inst?inst.cliente:'';
 });
-document.getElementById('prevBtn').addEventListener('click',abrirPrevencion);
+document.getElementById('prevBtn').addEventListener('click',()=>{document.getElementById('viewSupervisor').style.display='none';document.getElementById('ctlModeBar').style.display='';setModoPrev();});
 document.getElementById('pvAddCond').addEventListener('click',()=>document.getElementById('pvCondList').appendChild(pvCondRow()));
 document.getElementById('pvAddMed').addEventListener('click',()=>document.getElementById('pvMedList').appendChild(pvMedRow()));
-document.getElementById('pvCancel').addEventListener('click',()=>document.getElementById('prevModalBg').classList.remove('show'));
-document.getElementById('prevX').addEventListener('click',()=>document.getElementById('prevModalBg').classList.remove('show'));
 document.getElementById('pvGen').addEventListener('click',()=>{
   const instSel=document.getElementById('pvInst');
   if(!instSel.value){toast('Selecciona la instalación',true);return;}
   openReport(informePrevencionModel());
-  document.getElementById('prevModalBg').classList.remove('show');
 });
 function lineasA(id){return document.getElementById(id).value.split('\n').map(s=>s.trim()).filter(Boolean);}
 function informePrevencionModel(){
