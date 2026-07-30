@@ -476,17 +476,32 @@
         </div>
       </section>
       <section class="panel">
-        <div class="panel-head"><h2>Rondas de la jornada</h2><span class="reg-meta">Inalterable</span></div>
-        <div class="reg-actions"><button class="act-btn" id="jorMapBtn">🗺️ Mapa de la jornada</button><button class="act-btn" id="reportBtn">📄 Reporte del día</button><button class="act-btn" id="reportSelBtn">📄 Reporte de seleccionados</button><button class="act-btn" id="prevBtn" style="display:none;background:#8a5a12;color:#fff;border-color:#8a5a12">🛡 Informe de prevención</button></div>
-        <div id="jorMapWrap"><div class="map" id="jorMap"></div></div>
-        <div class="reg-list" id="regList"><div class="empty"><span class="ic">🗺️</span>Aún no hay rondas registradas en esta jornada.</div></div>
+        <div id="rondaJornadaBlock">
+          <div class="panel-head"><h2>Rondas de la jornada</h2><span class="reg-meta">Inalterable</span></div>
+          <div class="reg-actions"><button class="act-btn" id="jorMapBtn">🗺️ Mapa de la jornada</button><button class="act-btn" id="reportBtn">📄 Reporte del día</button><button class="act-btn" id="reportSelBtn">📄 Reporte de seleccionados</button><button class="act-btn" id="prevBtn" style="display:none;background:#8a5a12;color:#fff;border-color:#8a5a12">🛡 Informe de prevención</button></div>
+          <div id="jorMapWrap"><div class="map" id="jorMap"></div></div>
+          <div class="reg-list" id="regList"><div class="empty"><span class="ic">🗺️</span>Aún no hay rondas registradas en esta jornada.</div></div>
+        </div>
+        <div id="rondaHistBlock" style="display:none">
+          <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center"><h2>Histórico de rondas</h2><button class="ghost" id="rhRefresh" style="flex:0 0 auto">↻</button></div>
+          <p class="cap-sub" style="margin:2px 0 8px">Clic en una ronda para ver su informe, descargarlo o enviarlo.</p>
+          <div class="hist-filters">
+            <div class="ff"><label>Desde</label><input type="date" id="rfDesde"></div>
+            <div class="ff"><label>Hasta</label><input type="date" id="rfHasta"></div>
+            <div class="ff"><label>Empresa</label><select id="rfEmpresa"><option value="">Todas</option></select></div>
+            <div class="ff"><label>Instalación</label><select id="rfInst"><option value="">Todas</option></select></div>
+            <div class="ff ff-full"><label>Supervisor</label><select id="rfSup"><option value="">Todos</option></select></div>
+            <div class="ff-btns"><button class="ghost" id="rfClear" style="flex:1">Limpiar filtros</button><button class="ghost" id="ccInforme" style="flex:1">📄 Informe consolidado</button></div>
+          </div>
+          <div class="reg-list ctl-list-target-r" id="rondaHistList"><div class="empty"><span class="ic">🗺️</span>Cargando rondas…</div></div>
+        </div>
       </section>
     </div>
     <div id="ccRondasPanel" style="display:none">
       <section class="panel" style="margin-top:16px">
         <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div><h2>Rondas de todos los supervisores</h2><p class="cap-sub" style="margin:0">Control Central · consulta e informe consolidado</p></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="act-btn" id="ccRefresh">↻ Cargar / actualizar</button><button class="act-btn" id="ccInforme">📄 Informe consolidado</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="act-btn" id="ccRefresh">↻ Cargar / actualizar</button></div>
         </div>
         <div class="reg-list" id="ccRondasList"><div class="empty"><span class="ic">🗺️</span>Pulsa «Cargar» para ver las rondas de todos los supervisores.</div></div>
       </section>
@@ -591,7 +606,7 @@
     <div class="cap-card col-form">
       <div class="cap-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap"><div><h2>Pauta de Control de Supervisión</h2><p class="cap-sub">Instrumento de control en terreno · Ley 21.659 · DS 209/2024 · RIOHS</p></div><button class="ghost" id="btnTablaMaestra" style="flex:0 0 auto">📋 Tabla maestra</button></div>
       <div class="form-grid2">
-        <div class="field"><label>Supervisor(a) controlado(a) <span class="req">*</span></label><input type="text" id="cSup" placeholder="Nombre del supervisor"></div>
+        <div class="field"><label>Supervisor(a) controlado(a) <span class="req">*</span></label><select id="cSup"><option value="">— Seleccionar supervisor —</option></select></div>
         <div class="field"><label>RUT</label><input type="text" id="cRut" placeholder="12.345.678-9"></div>
         <div class="field"><label>Instalación / Mandante <span class="req">*</span></label><input type="text" id="cInst" placeholder="Instalación o cliente" list="clientes"></div>
         <div class="field"><label>Tipo de control <span class="req">*</span></label><select id="cTipo"><option value="Programado">Programado</option><option value="Sorpresa">Sorpresa</option><option value="Prueba">Prueba (borrable)</option></select></div>
@@ -815,6 +830,8 @@ function routeRol(rol){
     document.getElementById('fSup').value=sesion.nombre;document.getElementById('fSup').readOnly=true;
     document.getElementById('prevBtn').style.display='none';
     document.getElementById('ccRondasPanel').style.display='none';
+    document.getElementById('rondaJornadaBlock').style.display='';
+    document.getElementById('rondaHistBlock').style.display='none';
     poblarInstSelect();
     setTimeout(()=>{try{capMap.invalidateSize();}catch(_){}},160);
   }else if(rol==='admin'){
@@ -870,8 +887,11 @@ function setModoRonda(){
   document.getElementById('modeRonda').classList.add('act');['modeCtl','modeStats','modePrev'].forEach(id=>document.getElementById(id).classList.remove('act'));
   document.getElementById('hSub').textContent='Seguridad PK · Registro de ronda';
   document.getElementById('fSup').value=sesion.nombre;document.getElementById('fSup').readOnly=true;
-  document.getElementById('ccRondasPanel').style.display=(sesion.rol==='control'||sesion.rol==='admin')?'':'none';
+  document.getElementById('ccRondasPanel').style.display='none';
   document.getElementById('prevBtn').style.display='none';
+  document.getElementById('rondaJornadaBlock').style.display='none';
+  document.getElementById('rondaHistBlock').style.display='';
+  cargarRondaHist();
   poblarInstSelect();
   setTimeout(()=>{try{capMap.invalidateSize();}catch(_){}},160);
 }
@@ -920,6 +940,69 @@ function ccInformeConsolidado(){
 }
 document.getElementById('ccRefresh').addEventListener('click',ccCargarRondas);
 document.getElementById('ccInforme').addEventListener('click',ccInformeConsolidado);
+
+/* ----- Histórico de rondas (Control Central): filtros + ver/PDF/correo por ronda ----- */
+let rondaHistView=[];
+async function cargarRondaHist(){
+  const cont=document.getElementById('rondaHistList');if(cont)cont.innerHTML='<div class="empty"><span class="ic">⏳</span>Cargando rondas…</div>';
+  await cargarRondas();
+  poblarFiltrosRonda();
+  renderRondaHist();
+}
+function poblarFiltrosRonda(){
+  const emp=new Set(),ins=new Set(),sup=new Set();
+  rondasHist.forEach(r=>{if(r.cliente)emp.add(r.cliente);if(r.instalacion)ins.add(r.instalacion);if(r.supervisor)sup.add(r.supervisor);});
+  const fill=(id,vals,lbl)=>{const s=document.getElementById(id);if(!s)return;const prev=s.value;s.innerHTML=`<option value="">${lbl}</option>`+[...vals].sort((a,b)=>String(a).localeCompare(String(b))).map(v=>`<option>${esc(v)}</option>`).join('');if([...vals].includes(prev))s.value=prev;};
+  fill('rfEmpresa',emp,'Todas');fill('rfInst',ins,'Todas');fill('rfSup',sup,'Todos');
+}
+function renderRondaHist(){
+  const cont=document.getElementById('rondaHistList');if(!cont)return;
+  const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  const d=gv('rfDesde'),h=gv('rfHasta'),emp=gv('rfEmpresa'),ins=gv('rfInst'),sup=gv('rfSup');
+  const desde=d?new Date(d):null,hasta=h?new Date(h+'T23:59:59'):null;
+  rondaHistView=rondasHist.filter(r=>{
+    const f=new Date(r.fechaISO);
+    if(desde&&f<desde)return false;
+    if(hasta&&f>hasta)return false;
+    if(emp&&(r.cliente||'')!==emp)return false;
+    if(ins&&(r.instalacion||'')!==ins)return false;
+    if(sup&&(r.supervisor||'')!==sup)return false;
+    return true;
+  }).sort((a,b)=>b.fechaISO.localeCompare(a.fechaISO));
+  if(!rondasHist.length){cont.innerHTML='<div class="empty"><span class="ic">🗺️</span>No hay rondas registradas.</div>';return;}
+  if(!rondaHistView.length){cont.innerHTML='<div class="empty"><span class="ic">🗺️</span>Ninguna ronda coincide con los filtros.</div>';return;}
+  cont.innerHTML=rondaHistView.slice(0,300).map((r,i)=>{
+    const cls=r.rechazada?'rej':(r.conNovedad?'con':'');
+    const tag=r.rechazada?'<span class="tag rej">Fuera de perímetro</span>':(r.conNovedad?'<span class="tag con">Con novedad</span>':'<span class="tag sin">Sin novedad</span>');
+    const dt=new Date(r.fechaISO);const hora=dt.toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `<article class="reg-item ${cls}" style="cursor:pointer" onclick="verRonda(${i})"><div class="reg-top"><span class="folio">${esc(r.folio)}</span>${tag}</div><div class="reg-text">${esc(r.detalle||'')}</div><div class="reg-foot"><span><b>${esc(r.supervisor||'—')}</b></span><span>${esc(r.instalacion||'')}</span><span>${esc(r.cliente||'')}</span><span>${hora}</span>${r.dist!=null?`<span>${r.dist} m</span>`:''}</div><div class="row-btns" style="margin-top:6px"><button class="mini-btn" onclick="event.stopPropagation();verRonda(${i})">📄 Ver / PDF / Enviar</button></div></article>`;
+  }).join('');
+}
+function verRonda(i){const r=rondaHistView[i];if(!r)return;openReport(informeRondaModel(r));}
+function informeRondaModel(r){
+  const dt=new Date(r.fechaISO);
+  const fechaTxt=dt.toLocaleString('es-CL',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const estado=r.rechazada?'Fuera de perímetro':(r.conNovedad?'Con novedad':'Sin novedad');
+  const blocks=[
+    {h:'Identificación',type:'resumen',text:`Folio: ${r.folio}. Supervisor: ${r.supervisor||'—'}. Instalación / Faena: ${r.instalacion||'—'}. Mandante: ${r.cliente||'—'}. Fecha y hora: ${fechaTxt}.`},
+    {h:'Estado de la ronda',type:'kpis',items:[
+      {v:estado,k:'Resultado',cls:r.rechazada?'red':(r.conNovedad?'amber':'')},
+      {v:(r.dist!=null?r.dist+' m':'—'),k:'Distancia al punto'},
+      {v:(r.radio!=null?r.radio+' m':'—'),k:'Perímetro autorizado'}
+    ]},
+    {h:'Validación de presencia',type:'resumen',text:r.rechazada?'La ronda se registró FUERA del perímetro autorizado de la instalación.':'La ronda se registró dentro del perímetro autorizado de la instalación.'},
+    {h:'Novedades del turno',type:'resumen',text:(r.detalle&&r.detalle.trim())?r.detalle:'Sin novedades registradas.'}
+  ];
+  return {meta:{titulo:'Informe de Ronda',lineas:[
+    'Folio: '+r.folio,
+    'Supervisor: '+(r.supervisor||'—')+'  ·  '+(r.instalacion||'—'),
+    'Estado: '+estado+'  ·  Mandante: '+(r.cliente||'—'),
+    'Fecha: '+fechaTxt
+  ]},blocks};
+}
+['rfDesde','rfHasta','rfEmpresa','rfInst','rfSup'].forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('change',renderRondaHist);});
+(function(){const b=document.getElementById('rfClear');if(b)b.addEventListener('click',()=>{['rfDesde','rfHasta','rfEmpresa','rfInst','rfSup'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});renderRondaHist();});})();
+(function(){const b=document.getElementById('rhRefresh');if(b)b.addEventListener('click',cargarRondaHist);})();
 
 /* ----- Informe de prevención de riesgos (solo prevencionistas) ----- */
 const NIVELES_RIESGO=['Bajo','Medio','Alto','Crítico'];
@@ -1305,8 +1388,23 @@ function initControl(){
   document.getElementById('cControlador').value=sesion.nombre;
   document.getElementById('cFecha').value=new Date().toLocaleDateString('es-CL');
   if(!controlInit){renderPauta();document.getElementById('cSubmit').addEventListener('click',registrarControl);controlInit=true;}
+  cargarSupervisores();
   loadControles();
   refrescarClientes();
+}
+let supervisoresCache=null;
+async function cargarSupervisores(){
+  const sel=document.getElementById('cSup');if(!sel)return;
+  try{
+    const res=await pkApi('listarSupervisores',{token:TOKEN});
+    if(res&&res.ok){
+      supervisoresCache=res.supervisores||[];
+      const prev=sel.value;
+      sel.innerHTML='<option value="">— Seleccionar supervisor —</option>'+supervisoresCache.map(s=>`<option value="${esc(s.nombre)}">${esc(s.nombre)}</option>`).join('');
+      if(prev)sel.value=prev;
+      if(!supervisoresCache.length)sel.innerHTML='<option value="">— No hay supervisores creados —</option>';
+    }
+  }catch(e){console.error(e);}
 }
 function itDe(n){for(const d of PAUTA)for(const it of d.items)if(it.n===n)return it;return null;}
 function renderPauta(){
