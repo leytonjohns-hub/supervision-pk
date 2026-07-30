@@ -701,9 +701,22 @@
 
 <div id="viewPrev" style="display:none">
   <main>
-    <div class="cap-card">
+   <div class="ctl-split">
+    <div class="cap-card col-hist">
+      <div class="cap-head" style="display:flex;justify-content:space-between;align-items:center"><div><h2>Informes de prevención</h2><p class="cap-sub">Clic en un informe para ver, descargar o enviar</p></div><button class="ghost" id="pvhRefresh" style="flex:0 0 auto">↻</button></div>
+      <div class="hist-filters">
+        <div class="ff"><label>Desde</label><input type="date" id="pfDesde"></div>
+        <div class="ff"><label>Hasta</label><input type="date" id="pfHasta"></div>
+        <div class="ff"><label>Empresa</label><select id="pfEmpresa"><option value="">Todas</option></select></div>
+        <div class="ff"><label>Instalación</label><select id="pfInst"><option value="">Todas</option></select></div>
+        <div class="ff ff-full"><label>Prevencionista</label><select id="pfPrev"><option value="">Todos</option></select></div>
+        <div class="ff-btns"><button class="ghost" id="pfClear" style="flex:1">Limpiar filtros</button></div>
+      </div>
+      <div class="reg-list" id="prevHistList"><div class="empty"><span class="ic">🦺</span>Cargando informes…</div></div>
+    </div>
+    <div class="cap-card col-form">
       <div class="cap-head"><h2>Control de Prevención de Riesgos</h2><p class="cap-sub">Informe de prevención en terreno · Ley 21.659 · DS 44</p></div>
-      <p style="font-size:12.5px;color:var(--muted);margin:2px 0 14px">Los datos de identificación se cargan automáticamente. Completa las observaciones de terreno.</p>
+      <p style="font-size:12.5px;color:var(--muted);margin:2px 0 14px">Los datos de identificación se cargan automáticamente. Marca lo evaluable y describe solo los hallazgos.</p>
       <div class="form-grid2">
         <div class="field"><label>Instalación / Faena <span class="req">*</span></label><select id="pvInst"></select></div>
         <div class="field"><label>Puesto / Sector</label><input type="text" id="pvPuesto" placeholder="Ej: Acceso principal"></div>
@@ -714,15 +727,25 @@
       <div id="pvCondList"></div>
       <button type="button" class="ghost" id="pvAddCond" style="margin-top:6px">+ Agregar condición</button>
       <div class="field" style="margin-top:14px"><label>Actos inseguros observados</label><textarea id="pvActos" placeholder="Conductas del personal que implican riesgo (una por línea)…"></textarea></div>
-      <div class="field"><label>Estado de EPP</label><textarea id="pvEpp" placeholder="Disponibilidad, uso efectivo y estado de los elementos de protección personal…"></textarea></div>
-      <div class="field"><label>Medios y condiciones de emergencia</label><textarea id="pvEmerg" placeholder="Extintores (carga vigente), señalética, vías de evacuación, botiquín…"></textarea></div>
+      <div style="margin:14px 0 6px;font-weight:600;font-size:13px;color:var(--pk-green-dark)">Estado de EPP</div>
+      <div class="form-grid2">
+        <div class="field"><label>Evaluación</label><select id="pvEppEstado"><option>Conforme</option><option>Con observaciones</option><option>No conforme</option></select></div>
+        <div class="field"><label>Observación (si aplica)</label><input type="text" id="pvEppObs" placeholder="Detalle del EPP observado…"></div>
+      </div>
+      <div style="margin:14px 0 6px;font-weight:600;font-size:13px;color:var(--pk-green-dark)">Medios y condiciones de emergencia</div>
+      <div id="pvEmergList"></div>
       <div style="margin:14px 0 6px;font-weight:600;font-size:13px;color:var(--pk-green-dark)">Medidas correctivas propuestas</div>
       <div id="pvMedList"></div>
       <button type="button" class="ghost" id="pvAddMed" style="margin-top:6px">+ Agregar medida</button>
-      <div class="field" style="margin-top:14px"><label>Charla / capacitación del turno</label><textarea id="pvCharla" placeholder="Charla de seguridad, inducción o simulacro realizado en el turno (si aplica)…"></textarea></div>
-      <div class="field"><label>Observaciones generales y respaldo</label><textarea id="pvObs" placeholder="Síntesis y referencia a la evidencia (fotos, registros)…"></textarea></div>
-      <button class="submit-btn" id="pvGen" style="margin-top:16px;background:#8a5a12">🦺 Generar informe de prevención</button>
+      <div style="margin:14px 0 6px;font-weight:600;font-size:13px;color:var(--pk-green-dark)">Charla / capacitación del turno</div>
+      <div class="form-grid2">
+        <div class="field"><label>¿Se realizó?</label><select id="pvCharlaSi"><option>No</option><option>Sí</option></select></div>
+        <div class="field"><label>Tema (si aplica)</label><input type="text" id="pvCharlaTema" placeholder="Tema de la charla o inducción…"></div>
+      </div>
+      <div class="field" style="margin-top:14px"><label>Observaciones generales y respaldo</label><textarea id="pvObs" placeholder="Síntesis y referencia a la evidencia (fotos, registros)…"></textarea></div>
+      <button class="submit-btn" id="pvGen" style="margin-top:16px;background:#8a5a12">🦺 Generar y guardar informe</button>
     </div>
+   </div>
   </main>
 </div>
 
@@ -1004,8 +1027,10 @@ function informeRondaModel(r){
 (function(){const b=document.getElementById('rfClear');if(b)b.addEventListener('click',()=>{['rfDesde','rfHasta','rfEmpresa','rfInst','rfSup'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});renderRondaHist();});})();
 (function(){const b=document.getElementById('rhRefresh');if(b)b.addEventListener('click',cargarRondaHist);})();
 
-/* ----- Informe de prevención de riesgos (solo prevencionistas) ----- */
+/* ----- Control de Prevención de Riesgos ----- */
 const NIVELES_RIESGO=['Bajo','Medio','Alto','Crítico'];
+const EMERG_ITEMS=['Extintores','Señalética de emergencia','Botiquín de primeros auxilios','Vías de evacuación','Luces de emergencia','Sistema de alarma','Comunicaciones (radio/teléfono)','Libro de novedades','Elementos de control de acceso','Iluminación perimetral','CCTV / cámaras'];
+const EMERG_OPC=['Conforme','No conforme','No aplica'];
 function pvCondRow(){
   const div=document.createElement('div');
   div.className='pv-row';div.style.cssText='display:flex;gap:8px;margin-bottom:8px;align-items:flex-start';
@@ -1025,14 +1050,21 @@ function pvMedRow(){
   div.querySelector('.pv-del').addEventListener('click',()=>div.remove());
   return div;
 }
+function renderEmergList(){
+  const c=document.getElementById('pvEmergList');if(!c)return;
+  c.innerHTML=EMERG_ITEMS.map(it=>`<div class="pv-emerg-row" data-item="${esc(it)}" style="display:flex;gap:8px;align-items:center;margin-bottom:6px"><span style="flex:1;font-size:13px">${esc(it)}</span><select style="flex:0 0 150px;padding:7px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff">${EMERG_OPC.map(o=>`<option>${o}</option>`).join('')}</select></div>`).join('');
+}
 function abrirPrevencion(){
   const sel=document.getElementById('pvInst');
   sel.innerHTML='<option value="">— Seleccionar —</option>'+instalaciones.filter(i=>i.activa).map(i=>`<option value="${i.id}">${esc(i.nombre)} · ${esc(i.cliente)}</option>`).join('');
   document.getElementById('pvMandante').value='';
-  ['pvPuesto','pvActos','pvEpp','pvEmerg','pvCharla','pvObs'].forEach(id=>document.getElementById(id).value='');
+  ['pvPuesto','pvActos','pvEppObs','pvCharlaTema','pvObs'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pvTurno').value='Día';
+  document.getElementById('pvEppEstado').value='Conforme';
+  document.getElementById('pvCharlaSi').value='No';
   const cl=document.getElementById('pvCondList');cl.innerHTML='';cl.appendChild(pvCondRow());
   const ml=document.getElementById('pvMedList');ml.innerHTML='';ml.appendChild(pvMedRow());
+  renderEmergList();
 }
 function setModoPrev(){
   ['viewControl','viewSupervisor','viewStats'].forEach(v=>document.getElementById(v).style.display='none');
@@ -1041,37 +1073,53 @@ function setModoPrev(){
   document.getElementById('modePrev').classList.add('act');['modeCtl','modeRonda','modeStats'].forEach(id=>document.getElementById(id).classList.remove('act'));
   document.getElementById('hSub').textContent='Seguridad PK · Control de Prevención de Riesgos';
   abrirPrevencion();
+  cargarPrevHist();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 document.getElementById('pvInst').addEventListener('change',e=>{
   const inst=instalaciones.find(i=>String(i.id)===e.target.value);
   document.getElementById('pvMandante').value=inst?inst.cliente:'';
 });
-document.getElementById('prevBtn').addEventListener('click',()=>{document.getElementById('viewSupervisor').style.display='none';document.getElementById('ctlModeBar').style.display='';setModoPrev();});
 document.getElementById('pvAddCond').addEventListener('click',()=>document.getElementById('pvCondList').appendChild(pvCondRow()));
 document.getElementById('pvAddMed').addEventListener('click',()=>document.getElementById('pvMedList').appendChild(pvMedRow()));
-document.getElementById('pvGen').addEventListener('click',()=>{
-  const instSel=document.getElementById('pvInst');
-  if(!instSel.value){toast('Selecciona la instalación',true);return;}
-  openReport(informePrevencionModel());
-});
-function lineasA(id){return document.getElementById(id).value.split('\n').map(s=>s.trim()).filter(Boolean);}
-function informePrevencionModel(){
-  const inst=instalaciones.find(i=>String(i.id)===document.getElementById('pvInst').value);
-  const mandante=document.getElementById('pvMandante').value||'—';
-  const puesto=document.getElementById('pvPuesto').value.trim()||'—';
-  const turno=document.getElementById('pvTurno').value;
-  const hoy=new Date();const fechaTxt=hoy.toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'});
+function recogerPrevencionForm(){
   const conds=[...document.querySelectorAll('#pvCondList .pv-row')].map(r=>({d:r.querySelector('.pv-cond-desc').value.trim(),n:r.querySelector('.pv-cond-niv').value})).filter(x=>x.d);
   const meds=[...document.querySelectorAll('#pvMedList .pv-row')].map(r=>({d:r.querySelector('.pv-med-desc').value.trim(),resp:r.querySelector('.pv-med-resp').value.trim()||'—',plazo:r.querySelector('.pv-med-plazo').value.trim()||'—'})).filter(x=>x.d);
-  const actos=lineasA('pvActos'),epp=document.getElementById('pvEpp').value.trim(),emerg=document.getElementById('pvEmerg').value.trim(),charla=document.getElementById('pvCharla').value.trim(),obs=document.getElementById('pvObs').value.trim();
+  const actos=document.getElementById('pvActos').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const emerg=[...document.querySelectorAll('#pvEmergList .pv-emerg-row')].map(r=>({item:r.dataset.item,estado:r.querySelector('select').value}));
+  return {
+    puesto:document.getElementById('pvPuesto').value.trim(),
+    turno:document.getElementById('pvTurno').value,
+    mandante:document.getElementById('pvMandante').value,
+    conds:conds, actos:actos,
+    epp:{estado:document.getElementById('pvEppEstado').value,obs:document.getElementById('pvEppObs').value.trim()},
+    emerg:emerg, meds:meds,
+    charla:{realizada:document.getElementById('pvCharlaSi').value==='Sí',tema:document.getElementById('pvCharlaTema').value.trim()},
+    obs:document.getElementById('pvObs').value.trim()
+  };
+}
+document.getElementById('pvGen').addEventListener('click',async()=>{
+  const instSel=document.getElementById('pvInst');
+  if(!instSel.value){toast('Selecciona la instalación',true);return;}
+  const inst=instalaciones.find(i=>String(i.id)===instSel.value);
+  const dz=recogerPrevencionForm();
+  const meta={prevencionista:sesion.nombre,instalacion:inst?inst.nombre:'—',mandante:dz.mandante||'—',turno:dz.turno,puesto:dz.puesto||'—',fecha:new Date()};
+  openReport(informePrevencionModelFrom(dz,meta));
+  try{
+    const res=await pkApi('registrarPrevencion',{token:TOKEN,prevencion:{instalacion:meta.instalacion,mandante:meta.mandante,turno:meta.turno,puesto:meta.puesto,ncond:(dz.conds||[]).length,nmed:(dz.meds||[]).length,datos:dz}});
+    if(res&&res.ok){toast('Informe de prevención guardado');cargarPrevHist();}
+    else{toast((res&&res.error)||'Se generó el informe, pero no se pudo guardar',true);}
+  }catch(e){console.error(e);toast('Se generó el informe, pero no se pudo guardar',true);}
+});
+function informePrevencionModelFrom(dz,meta){
+  const fechaTxt=(meta.fecha instanceof Date?meta.fecha:new Date(meta.fecha)).toLocaleDateString('es-CL',{day:'2-digit',month:'long',year:'numeric'});
+  const conds=dz.conds||[],meds=dz.meds||[],actos=dz.actos||[],emerg=dz.emerg||[],epp=dz.epp||{},charla=dz.charla||{};
   const blocks=[];
-  blocks.push({h:'Identificación',type:'resumen',text:`Prevencionista: ${sesion.nombre}. Instalación/Faena: ${inst?inst.nombre:'—'}. Puesto/Sector: ${puesto}. Mandante: ${mandante}. Turno: ${turno}. Fecha: ${fechaTxt}.`});
-  // Condiciones inseguras
+  blocks.push({h:'Identificación',type:'resumen',text:`Prevencionista: ${meta.prevencionista||'—'}. Instalación/Faena: ${meta.instalacion||'—'}. Puesto/Sector: ${meta.puesto||'—'}. Mandante: ${meta.mandante||'—'}. Turno: ${meta.turno||'—'}. Fecha: ${fechaTxt}.`});
   if(conds.length){
     const cnt={Bajo:0,Medio:0,Alto:0,'Crítico':0};conds.forEach(c=>cnt[c.n]=(cnt[c.n]||0)+1);
     blocks.push({h:'Condiciones inseguras detectadas',type:'table',head:['#','Condición y ubicación','Nivel de riesgo'],leftCols:[1],
-      rows:conds.map((c,i)=>[{v:String(i+1)},{v:c.d,...((c.n==='Crítico'||c.n==='Alto')?{flag:{cls:(c.n==='Crítico'?'rev':'nov'),txt:c.n.toUpperCase()}}:{})},{v:c.n}])});
+      rows:conds.map((c,i)=>[{v:String(i+1)},{v:c.d,...((c.n==='Crítico'||c.n==='Alto')?{flag:{cls:(c.n==='Crítico'?'rev':'nov'),txt:String(c.n).toUpperCase()}}:{})},{v:c.n}])});
     blocks.push({type:'kpis',items:[
       {v:cnt['Crítico']||0,k:'Críticas',cls:(cnt['Crítico']?'red':'')},
       {v:cnt['Alto']||0,k:'Altas',cls:(cnt['Alto']?'red':'')},
@@ -1080,20 +1128,68 @@ function informePrevencionModel(){
     ]});
   }else{blocks.push({h:'Condiciones inseguras detectadas',type:'resumen',text:'No se detectaron condiciones inseguras en esta inspección.'});}
   if(actos.length)blocks.push({h:'Actos inseguros observados',type:'findings',items:actos.map(a=>({ok:false,text:a}))});
-  if(epp)blocks.push({h:'Estado de EPP',type:'resumen',text:epp});
-  if(emerg)blocks.push({h:'Medios y condiciones de emergencia',type:'resumen',text:emerg});
+  blocks.push({h:'Estado de EPP',type:'resumen',text:`Evaluación: ${epp.estado||'—'}.${epp.obs?(' Observación: '+epp.obs):''}`});
+  if(emerg.length){
+    blocks.push({h:'Medios y condiciones de emergencia',type:'table',head:['Elemento','Estado'],leftCols:[0],
+      rows:emerg.map(e=>[{v:e.item},{v:e.estado,...(e.estado==='No conforme'?{flag:{cls:'nov',txt:'NO CONFORME'}}:{})}])});
+  }
   if(meds.length)blocks.push({h:'Medidas correctivas propuestas',type:'table',head:['#','Medida','Responsable','Plazo'],leftCols:[1,2],
     rows:meds.map((m,i)=>[{v:String(i+1)},{v:m.d},{v:m.resp},{v:m.plazo}])});
-  if(charla)blocks.push({h:'Charla / capacitación del turno',type:'resumen',text:charla});
-  if(obs)blocks.push({h:'Observaciones generales y respaldo',type:'resumen',text:obs});
+  blocks.push({h:'Charla / capacitación del turno',type:'resumen',text:charla.realizada?('Sí'+(charla.tema?(' — '+charla.tema):'')):'No se realizó charla en el turno.'});
+  if(dz.obs)blocks.push({h:'Observaciones generales y respaldo',type:'resumen',text:dz.obs});
   blocks.push({h:'Naturaleza del documento',type:'resumen',text:'Informe técnico-preventivo elaborado en terreno conforme a la Ley 21.659 y al DS 44. Las medidas correctivas son propuestas para gestión de la línea de mando y del mandante; no constituyen resoluciones. Su implementación y verificación corresponden a los responsables designados.'});
   return {meta:{titulo:'Informe de Prevención de Riesgos',lineas:[
-    'Prevencionista: '+sesion.nombre,
-    'Instalación: '+(inst?inst.nombre:'—')+'  ·  Mandante: '+mandante,
-    'Turno: '+turno+'  ·  Fecha: '+fechaTxt,
+    'Prevencionista: '+(meta.prevencionista||'—'),
+    'Instalación: '+(meta.instalacion||'—')+'  ·  Mandante: '+(meta.mandante||'—'),
+    'Turno: '+(meta.turno||'—')+'  ·  Fecha: '+fechaTxt,
     (conds.length?('Condiciones detectadas: '+conds.length):'Sin condiciones inseguras detectadas')
   ]},blocks};
 }
+/* Histórico de prevención */
+let prevHistData=[],prevHistView=[];
+async function cargarPrevHist(){
+  const cont=document.getElementById('prevHistList');if(cont)cont.innerHTML='<div class="empty"><span class="ic">⏳</span>Cargando informes…</div>';
+  try{const res=await pkApi('prevenciones',{token:TOKEN});prevHistData=(res&&res.ok&&res.prevenciones)?res.prevenciones:[];}
+  catch(e){console.error(e);prevHistData=[];}
+  poblarFiltrosPrev();renderPrevHist();
+}
+function poblarFiltrosPrev(){
+  const emp=new Set(),ins=new Set(),prv=new Set();
+  prevHistData.forEach(p=>{if(p.mandante)emp.add(p.mandante);if(p.instalacion)ins.add(p.instalacion);if(p.prevencionista)prv.add(p.prevencionista);});
+  const fill=(id,vals,lbl)=>{const s=document.getElementById(id);if(!s)return;const prev=s.value;s.innerHTML=`<option value="">${lbl}</option>`+[...vals].sort((a,b)=>String(a).localeCompare(String(b))).map(v=>`<option>${esc(v)}</option>`).join('');if([...vals].includes(prev))s.value=prev;};
+  fill('pfEmpresa',emp,'Todas');fill('pfInst',ins,'Todas');fill('pfPrev',prv,'Todos');
+}
+function renderPrevHist(){
+  const cont=document.getElementById('prevHistList');if(!cont)return;
+  const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  const d=gv('pfDesde'),h=gv('pfHasta'),emp=gv('pfEmpresa'),ins=gv('pfInst'),prv=gv('pfPrev');
+  const desde=d?new Date(d):null,hasta=h?new Date(h+'T23:59:59'):null;
+  prevHistView=prevHistData.filter(p=>{
+    const f=new Date(p.fecha);
+    if(desde&&f<desde)return false;
+    if(hasta&&f>hasta)return false;
+    if(emp&&(p.mandante||'')!==emp)return false;
+    if(ins&&(p.instalacion||'')!==ins)return false;
+    if(prv&&(p.prevencionista||'')!==prv)return false;
+    return true;
+  }).sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+  if(!prevHistData.length){cont.innerHTML='<div class="empty"><span class="ic">🦺</span>Aún no hay informes de prevención.</div>';return;}
+  if(!prevHistView.length){cont.innerHTML='<div class="empty"><span class="ic">🦺</span>Ningún informe coincide con los filtros.</div>';return;}
+  cont.innerHTML=prevHistView.slice(0,300).map((p,i)=>{
+    const dt=p.fecha?new Date(p.fecha).toLocaleDateString('es-CL'):'';
+    const nc=Number(p.ncond||0);
+    const tag=nc>0?`<span class="badge-cell b-con">${nc} condición(es)</span>`:`<span class="badge-cell b-sin">Sin condiciones</span>`;
+    return `<article class="reg-item" style="cursor:pointer" onclick="verPrevencion(${i})"><div class="reg-top"><span class="folio">${esc(p.folio||'')}</span>${tag}</div><div class="reg-foot"><span><b>${esc(p.prevencionista||'—')}</b></span><span>${esc(p.instalacion||'')}</span><span>${esc(p.mandante||'')}</span><span>${esc(dt)}</span></div><div class="row-btns" style="margin-top:6px"><button class="mini-btn" onclick="event.stopPropagation();verPrevencion(${i})">📄 Ver / PDF / Enviar</button></div></article>`;
+  }).join('');
+}
+function verPrevencion(i){
+  const p=prevHistView[i];if(!p)return;
+  let dz={};try{dz=JSON.parse(p.datos||'{}');}catch(e){}
+  openReport(informePrevencionModelFrom(dz,{prevencionista:p.prevencionista,instalacion:p.instalacion,mandante:p.mandante,turno:p.turno,puesto:p.puesto,fecha:p.fecha}));
+}
+['pfDesde','pfHasta','pfEmpresa','pfInst','pfPrev'].forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('change',renderPrevHist);});
+(function(){const b=document.getElementById('pfClear');if(b)b.addEventListener('click',()=>{['pfDesde','pfHasta','pfEmpresa','pfInst','pfPrev'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});renderPrevHist();});})();
+(function(){const b=document.getElementById('pvhRefresh');if(b)b.addEventListener('click',cargarPrevHist);})();
 function logout(){TOKEN=null;sesion=null;document.getElementById('userChip').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('liUser').value='';document.getElementById('liPass').value='';document.getElementById('liErr').textContent='';}
 document.getElementById('liBtn').addEventListener('click',login);
 document.getElementById('liPass').addEventListener('keydown',e=>{if(e.key==='Enter')login();});
