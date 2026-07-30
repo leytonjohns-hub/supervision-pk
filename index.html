@@ -158,6 +158,21 @@
   .pi-det.open{max-height:320px;margin-bottom:8px}
   .pi-det .pdt{font-size:12px;line-height:1.5;color:#374151;background:#f6f8f4;border-left:3px solid var(--laurel-soft,#c8d6bd);padding:5px 10px;margin-bottom:4px;border-radius:0 6px 6px 0}
   .pi-det .pdt b{color:var(--pk-green-dark)}
+  /* ===== Hub de controles ===== */
+  .hub-banner{background:linear-gradient(135deg,#fff8e6,#fef3d0);border:1px solid #e8cf7a;border-left:5px solid var(--pk-gold,#B8860B);border-radius:12px;padding:16px 18px;margin-bottom:22px;box-shadow:var(--shadow)}
+  .hub-banner h3{margin:0 0 8px;font-size:14px;color:#7a5a0b;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+  .hub-banner ol{margin:0;padding-left:20px}
+  .hub-banner li{font-size:13.5px;line-height:1.55;color:#5c4a1c;margin-bottom:5px}
+  .hub-banner b{color:#4a3a10}
+  .hub-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+  .hub-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 20px;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s;box-shadow:var(--shadow);text-align:center;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .hub-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.13);border-color:var(--pk-green)}
+  .hub-ic{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px;color:#fff}
+  .hub-card h2{margin:0;font-size:17px;color:var(--pk-green-dark)}
+  .hub-card p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+  .hub-go{margin-top:6px;font-size:12.5px;font-weight:700;color:var(--pk-green)}
+  .hub-title{font-size:20px;color:var(--pk-green-dark);margin:0 0 4px}
+  .hub-sub{font-size:13px;color:var(--muted);margin:0 0 20px}
   .carta-config{background:#f6f8f4;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
   .cc-field{margin-bottom:12px}.cc-field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px}
   .cc-field select,.cc-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;background:#fff}
@@ -346,10 +361,47 @@
 </header>
 
 <div id="ctlModeBar" style="display:none"><div class="mode-inner">
+  <button type="button" id="modeHub" class="mode-btn" style="background:#0e0f0c;color:#fff">⌂ Registrar otro control</button>
   <button type="button" id="modeCtl" class="mode-btn act">🛡 Control de supervisión</button>
   <button type="button" id="modeRonda" class="mode-btn">📋 Registrar ronda</button>
   <button type="button" id="modeStats" class="mode-btn">📊 Estadísticas</button>
 </div></div>
+
+<!-- =================== HUB DE CONTROLES (Control Central) =================== -->
+<div id="viewHub" style="display:none">
+  <main>
+    <div class="hub-banner">
+      <h3>⚠ RECUERDE QUE</h3>
+      <ol>
+        <li>Para <b>SOPROLE</b> o <b>WEIR MINERALS</b> se deben generar los siguientes controles: <b>Control de Supervisión</b> y <b>Control de Prevención de Riesgos</b>.</li>
+        <li>Para <b>otras instalaciones</b> donde el supervisor no esté presente de manera permanente, generar los siguientes controles: <b>Control de Ronda</b> y <b>Control de Prevención de Riesgos</b>.</li>
+      </ol>
+    </div>
+    <p class="hub-title">¿Qué control vas a registrar?</p>
+    <p class="hub-sub">Selecciona una sección para comenzar. Podrás volver aquí en cualquier momento con «Registrar otro control».</p>
+    <div class="hub-grid">
+      <div class="hub-card" id="cardRonda">
+        <div class="hub-ic" style="background:linear-gradient(135deg,#2E7D32,#1b5e20)">📋</div>
+        <h2>Control de Ronda</h2>
+        <p>Registro de rondas en instalaciones sin supervisor permanente.</p>
+        <span class="hub-go">Entrar →</span>
+      </div>
+      <div class="hub-card" id="cardSup">
+        <div class="hub-ic" style="background:linear-gradient(135deg,#1A7A8A,#0f5f6b)">🛡</div>
+        <h2>Control de Supervisores</h2>
+        <p>Pauta de control de supervisión en terreno (35 aspectos).</p>
+        <span class="hub-go">Entrar →</span>
+      </div>
+      <div class="hub-card" id="cardPrev">
+        <div class="hub-ic" style="background:linear-gradient(135deg,#B8860B,#8a5a12)">🦺</div>
+        <h2>Control de Prevención de Riesgos</h2>
+        <p>Informe de prevención de riesgos en terreno.</p>
+        <span class="hub-go">Entrar →</span>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:22px"><button class="ghost" id="hubStats">📊 Ver estadísticas de control</button></div>
+  </main>
+</div>
 
 <div class="login-bg" id="loginScreen">
   <div class="login-card">
@@ -738,10 +790,30 @@ function routeRol(rol){
     document.getElementById('viewGerencia').style.display='';sub.textContent='Seguridad PK · Tablero de control';
     initDashboard();
   }else if(rol==='control'){
-    document.getElementById('ctlModeBar').style.display='';
-    setModoControl();
+    irAlHub();
   }
 }
+/* ===== Hub de controles (Control Central) ===== */
+function irAlHub(){
+  ['viewSupervisor','viewControl','viewStats'].forEach(v=>document.getElementById(v).style.display='none');
+  document.getElementById('ctlModeBar').style.display='none';
+  document.getElementById('fab').classList.remove('show');
+  document.getElementById('viewHub').style.display='';
+  document.getElementById('hSub').textContent='Seguridad PK · Menú de controles';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function abrirSeccion(sec){
+  document.getElementById('viewHub').style.display='none';
+  document.getElementById('ctlModeBar').style.display='';
+  if(sec==='sup')setModoControl();
+  else if(sec==='ronda')setModoRonda();
+  else if(sec==='stats')setModoStats();
+}
+document.getElementById('cardSup').addEventListener('click',()=>abrirSeccion('sup'));
+document.getElementById('cardRonda').addEventListener('click',()=>abrirSeccion('ronda'));
+document.getElementById('cardPrev').addEventListener('click',()=>{abrirPrevencion();});
+document.getElementById('hubStats').addEventListener('click',()=>abrirSeccion('stats'));
+document.getElementById('modeHub').addEventListener('click',irAlHub);
 /* ===== Control Central: alterna entre control de supervisión y registro de ronda ===== */
 function setModoControl(){
   document.getElementById('viewSupervisor').style.display='none';
