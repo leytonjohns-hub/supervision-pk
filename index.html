@@ -180,6 +180,21 @@
     .hub-banner{padding:13px 14px}
     .hub-banner li{font-size:12.5px}
   }
+  /* ===== Layout dos columnas: control (izq) + histórico (der) ===== */
+  .ctl-split{display:grid;gap:16px}
+  @media(min-width:980px){
+    .ctl-split{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:start}
+    .ctl-split .col-form{order:1}
+    .ctl-split .col-hist{order:2;position:sticky;top:12px}
+  }
+  .col-hist .ctl-list-target{max-height:none}
+  @media(min-width:980px){.col-hist .ctl-list-target{max-height:calc(100vh - 220px);overflow-y:auto;padding-right:4px}}
+  .hist-filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}
+  .hist-filters .ff{display:flex;flex-direction:column;gap:3px}
+  .hist-filters label{font-size:11px;color:var(--muted);font-weight:600}
+  .hist-filters input,.hist-filters select{padding:8px 9px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;width:100%}
+  .hist-filters .ff-full{grid-column:1/-1}
+  .hist-filters .ff-btns{grid-column:1/-1;display:flex;gap:8px}
   .carta-config{background:#f6f8f4;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
   .cc-field{margin-bottom:12px}.cc-field label{display:block;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px}
   .cc-field select,.cc-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:14px;background:#fff}
@@ -560,11 +575,20 @@
 
 <div id="viewControl" style="display:none">
   <main>
-    <div class="cap-card" style="margin-bottom:16px">
-      <div class="cap-head" style="display:flex;justify-content:space-between;align-items:center"><div><h2>Controles registrados</h2><p class="cap-sub">Abre el informe de cada control aplicado</p></div><button class="ghost" id="ctlRefresh" style="flex:0 0 auto">↻ Actualizar</button></div>
+   <div class="ctl-split">
+    <div class="cap-card col-hist">
+      <div class="cap-head" style="display:flex;justify-content:space-between;align-items:center"><div><h2>Controles registrados</h2><p class="cap-sub">Clic en un control para ver su informe y PDF</p></div><button class="ghost" id="ctlRefresh" style="flex:0 0 auto">↻</button></div>
+      <div class="hist-filters">
+        <div class="ff"><label>Desde</label><input type="date" id="cfDesde"></div>
+        <div class="ff"><label>Hasta</label><input type="date" id="cfHasta"></div>
+        <div class="ff"><label>Empresa</label><select id="cfEmpresa"><option value="">Todas</option></select></div>
+        <div class="ff"><label>Instalación</label><select id="cfInst"><option value="">Todas</option></select></div>
+        <div class="ff ff-full"><label>Supervisor</label><select id="cfSup"><option value="">Todos</option></select></div>
+        <div class="ff-btns"><button class="ghost" id="cfClear" style="flex:1">Limpiar filtros</button></div>
+      </div>
       <div id="ctlList" class="ctl-list-target"><p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Cargando…</p></div>
     </div>
-    <div class="cap-card">
+    <div class="cap-card col-form">
       <div class="cap-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap"><div><h2>Pauta de Control de Supervisión</h2><p class="cap-sub">Instrumento de control en terreno · Ley 21.659 · DS 209/2024 · RIOHS</p></div><button class="ghost" id="btnTablaMaestra" style="flex:0 0 auto">📋 Tabla maestra</button></div>
       <div class="form-grid2">
         <div class="field"><label>Supervisor(a) controlado(a) <span class="req">*</span></label><input type="text" id="cSup" placeholder="Nombre del supervisor"></div>
@@ -585,6 +609,7 @@
       <div class="field" style="margin-top:14px"><label>Observaciones generales del control</label><textarea id="cObs" placeholder="Síntesis, contexto y hallazgos relevantes del control…"></textarea></div>
       <button class="submit-btn" id="cSubmit" style="margin-top:14px">Registrar control</button>
     </div>
+   </div>
   </main>
 </div>
 
@@ -1363,13 +1388,42 @@ async function loadControles(){
   let res;try{res=await pkApi('controles',{token:TOKEN});}catch(e){set('<p style="color:var(--urgent);font-size:13px;text-align:center;padding:12px">Sin conexión con el servidor.</p>');return;}
   if(!res||!res.ok){set('<p style="color:var(--urgent);font-size:13px;text-align:center;padding:12px">No se pudieron cargar los controles.</p>');return;}
   controles=(res.controles||[]).slice().reverse();
+  poblarFiltrosCtl();
   renderCtlList();
 }
 function bandaCls(pct){return pct>=90?'b-sin':pct>=75?'b-sin':pct>=60?'b-con':'b-rej';}
+function empresaDeControl(c){
+  const t=(c.instalacion||'').trim().toLowerCase();if(!t)return '';
+  let m=instalaciones.find(i=>(i.nombre||'').trim().toLowerCase()===t);
+  if(!m)m=instalaciones.find(i=>{const n=(i.nombre||'').toLowerCase();return n&&(n.includes(t)||t.includes(n));});
+  return m?(m.cliente||''):'';
+}
+function poblarFiltrosCtl(){
+  const emp=new Set(),ins=new Set(),sup=new Set();
+  controles.forEach(c=>{const e=empresaDeControl(c);if(e)emp.add(e);if(c.instalacion)ins.add(c.instalacion);if(c.supervisor)sup.add(c.supervisor);});
+  const fill=(id,vals,lbl)=>{const s=document.getElementById(id);if(!s)return;const prev=s.value;s.innerHTML=`<option value="">${lbl}</option>`+[...vals].sort((a,b)=>a.localeCompare(b)).map(v=>`<option>${esc(v)}</option>`).join('');if([...vals].includes(prev))s.value=prev;};
+  fill('cfEmpresa',emp,'Todas');fill('cfInst',ins,'Todas');fill('cfSup',sup,'Todos');
+}
+function ctlFiltrados(){
+  const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
+  const d=gv('cfDesde'),h=gv('cfHasta'),emp=gv('cfEmpresa'),ins=gv('cfInst'),sup=gv('cfSup');
+  const desde=d?new Date(d):null,hasta=h?new Date(h+'T23:59:59'):null;
+  return controles.map((c,idx)=>({c,idx})).filter(({c})=>{
+    const f=new Date(c.fecha);
+    if(desde&&f<desde)return false;
+    if(hasta&&f>hasta)return false;
+    if(ins&&(c.instalacion||'')!==ins)return false;
+    if(sup&&(c.supervisor||'')!==sup)return false;
+    if(emp&&empresaDeControl(c)!==emp)return false;
+    return true;
+  });
+}
 function renderCtlList(){
   const targets=ctlTargets();if(!targets.length)return;
   if(!controles.length){targets.forEach(c=>c.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Aún no hay controles registrados.</p>');return;}
-  const html=controles.map((c,idx)=>{let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){}
+  const lista=ctlFiltrados();
+  if(!lista.length){targets.forEach(c=>c.innerHTML='<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Ningún control coincide con los filtros.</p>');return;}
+  const html=lista.map(({c,idx})=>{let items=[];try{items=JSON.parse(c.items||'[]');}catch(e){}
     const nc=items.filter(i=>i.resultado==='NC');const g=nc.filter(i=>gOf(i)==='G').length,x=nc.filter(i=>gOf(i)==='X').length,l=nc.filter(i=>gOf(i)==='L').length;
     const fecha=c.fecha?new Date(c.fecha).toLocaleDateString('es-CL'):'';
     const esPrueba=(c.tipo||'')==='Prueba';
@@ -1380,6 +1434,8 @@ function renderCtlList(){
     <div class="row-btns"><span style="font-size:11px;color:var(--muted)">${esc(c.folio||'')}</span><button class="mini-btn" onclick="verInformeControl(${idx})">📄 Ver informe</button>${(l+g+x)>0?`<button class="mini-btn" onclick="abrirCarta(${idx})">✉ Carta</button>`:''}${puedeBorrar?`<button class="mini-btn" style="color:var(--urgent);border-color:#f2c9c4" onclick="borrarControl(${idx})">🗑 Borrar</button>`:''}</div></div>`;}).join('');
   targets.forEach(c=>c.innerHTML=html);
 }
+['cfDesde','cfHasta','cfEmpresa','cfInst','cfSup'].forEach(id=>{const e=document.getElementById(id);if(e)e.addEventListener('change',renderCtlList);});
+(function(){const b=document.getElementById('cfClear');if(b)b.addEventListener('click',()=>{['cfDesde','cfHasta','cfEmpresa','cfInst','cfSup'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});renderCtlList();});})();
 async function borrarControl(idx){
   const c=controles[idx];if(!c)return;
   if((c.tipo||'')!=='Prueba'){toast('Solo se pueden borrar controles de tipo Prueba',true);return;}
